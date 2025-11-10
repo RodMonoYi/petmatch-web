@@ -1,0 +1,108 @@
+import axios from 'axios';
+import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message } from '../types';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Interceptor para adicionar token de autenticação
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Interceptor para lidar com respostas de erro
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  register: (data: RegisterData): Promise<AuthResponse> =>
+    api.post('/auth/register', data).then(res => res.data),
+  
+  login: (data: LoginData): Promise<AuthResponse> =>
+    api.post('/auth/login', { email: data.email, senha: data.senha }).then(res => res.data),
+  
+  getProfile: (): Promise<User> =>
+    api.get('/auth/profile').then(res => res.data),
+};
+
+// Users API
+export const usersAPI = {
+  getMe: (): Promise<User> =>
+    api.get('/users/me').then(res => res.data),
+  
+  updateMe: (data: Partial<User>): Promise<User> =>
+    api.patch('/users/me', data).then(res => res.data),
+  
+  deleteMe: (): Promise<void> =>
+    api.delete('/users/me').then(res => res.data),
+};
+
+// Pets API
+export const petsAPI = {
+  create: (data: CreatePetData): Promise<Pet> =>
+    api.post('/pets', data).then(res => res.data),
+  
+  getAll: (params?: SearchPetsParams): Promise<PetsResponse> =>
+    api.get('/pets', { params }).then(res => res.data),
+  
+  getMyPets: (): Promise<Pet[]> =>
+    api.get('/pets/my-pets').then(res => res.data),
+  
+  getById: (id: string): Promise<Pet> =>
+    api.get(`/pets/${id}`).then(res => res.data),
+  
+  update: (id: string, data: Partial<CreatePetData>): Promise<Pet> =>
+    api.patch(`/pets/${id}`, data).then(res => res.data),
+  
+  delete: (id: string): Promise<void> =>
+    api.delete(`/pets/${id}`).then(res => res.data),
+};
+
+// Matches API
+export const matchesAPI = {
+  swipe: (petId: string, targetPetId: string, action: 'like' | 'dislike') =>
+    api.post(`/matches/swipe/${petId}`, { fk_pet_id_2: targetPetId, action }).then(res => res.data),
+  
+  getMyMatches: (): Promise<Match[]> =>
+    api.get('/matches/my-matches').then(res => res.data),
+  
+  getPotentialMatches: (petId: string, limit?: number): Promise<Pet[]> =>
+    api.get(`/matches/potential/${petId}`, { params: { limit } }).then(res => res.data),
+  
+  getById: (id: string): Promise<Match> =>
+    api.get(`/matches/${id}`).then(res => res.data),
+};
+
+// Chat API
+export const chatAPI = {
+  sendMessage: (conversationId: string, conteudo: string): Promise<Message> =>
+    api.post('/chat/send', { conversationId, conteudo }).then(res => res.data),
+  
+  getConversations: (): Promise<Conversation[]> =>
+    api.get('/chat/conversations').then(res => res.data),
+  
+  getMessages: (conversationId: string): Promise<Message[]> =>
+    api.get(`/chat/conversations/${conversationId}/messages`).then(res => res.data),
+};
+
+export default api;
+
