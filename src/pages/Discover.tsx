@@ -111,6 +111,7 @@ const Discover: React.FC = () => {
 
   const getSpeciesIcon = (especie: string) => {
     switch (especie.toLowerCase()) {
+      case 'cão':
       case 'cachorro':
         return <Dog className="h-5 w-5 text-pink-500" />;
       case 'gato':
@@ -291,4 +292,3 @@ const Discover: React.FC = () => {
 };
 
 export default Discover;
-

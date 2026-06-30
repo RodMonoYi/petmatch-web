@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ interface Conversation {
     nome: string;
   };
   match: {
+    id: string;
     pet1: {
       nome: string;
       especie: string;
@@ -57,6 +59,9 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedConversationRef = useRef<Conversation | null>(null);
+  const [searchParams] = useSearchParams();
+  const matchId = searchParams.get('match');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,6 +70,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    selectedConversationRef.current = selectedConversation;
+  }, [selectedConversation]);
 
   useEffect(() => {
     if (user) {
@@ -83,9 +92,22 @@ const Chat: React.FC = () => {
       });
 
       newSocket.on('newMessage', (message: Message) => {
-        if (selectedConversation && message.fk_conversa_id === selectedConversation.id) {
-          setMessages(prev => [...prev, message]);
+        const activeConversation = selectedConversationRef.current;
+        if (activeConversation && message.fk_conversa_id === activeConversation.id) {
+          setMessages(prev => {
+            if (prev.some(existingMessage => existingMessage.id === message.id)) {
+              return prev;
+            }
+
+            return [...prev, message];
+          });
         }
+
+        setConversations(prev => prev.map(conversation =>
+          conversation.id === message.fk_conversa_id
+            ? { ...conversation, ultimaMensagem: message }
+            : conversation
+        ));
       });
 
       setSocket(newSocket);
@@ -98,6 +120,20 @@ const Chat: React.FC = () => {
       };
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!matchId || selectedConversation || conversations.length === 0) {
+      return;
+    }
+
+    const conversationFromMatch = conversations.find((conversation) => (
+      conversation.fk_match_id === matchId || conversation.match?.id === matchId
+    ));
+
+    if (conversationFromMatch) {
+      setSelectedConversation(conversationFromMatch);
+    }
+  }, [conversations, matchId, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation && socket) {
@@ -329,4 +365,3 @@ const Chat: React.FC = () => {
 };
 
 export default Chat;
-
