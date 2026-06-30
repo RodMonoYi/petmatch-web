@@ -61,13 +61,13 @@ const Header: React.FC = () => {
             ) : (
               <>
                 <Link
-                  to="/about"
+                  to="/sobre"
                   className="text-gray-700 hover:text-pink-500 transition-colors"
                 >
                   Sobre
                 </Link>
                 <Link
-                  to="/how-it-works"
+                  to="/sobre"
                   className="text-gray-700 hover:text-pink-500 transition-colors"
                 >
                   Como Funciona
@@ -111,4 +111,3 @@ const Header: React.FC = () => {
 };
 
 export default Header;
-
