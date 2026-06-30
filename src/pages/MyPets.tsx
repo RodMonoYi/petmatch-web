@@ -212,11 +212,11 @@ const MyPets: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">**Espécie:** {pet.especie}</p>
-                <p className="text-sm text-gray-600">**Raça:** {pet.raca}</p>
-                <p className="text-sm text-gray-600">**Gênero:** {pet.genero}</p>
-                <p className="text-sm text-gray-600">**Porte:** {pet.porte}</p>
-                {pet.descricao && <p className="text-sm text-gray-600 mt-2">**Descrição:** {pet.descricao}</p>}
+                <p className="text-sm text-gray-600"><b>Espécie:</b> {pet.especie}</p>
+                <p className="text-sm text-gray-600"><b>Raça:</b> {pet.raca}</p>
+                <p className="text-sm text-gray-600"><b>Gênero:</b> {pet.genero}</p>
+                <p className="text-sm text-gray-600"><b>Porte:</b> {pet.porte}</p>
+                {pet.descricao && <p className="text-sm text-gray-600 mt-2"><b>Descrição:</b> {pet.descricao}</p>}
               </CardContent>
             </Card>
           ))}

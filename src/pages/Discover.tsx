@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { petsAPI, matchesAPI } from '../services/api';
 import { Pet } from '../types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, X, MapPin, Calendar, Dog, Cat, Bird, Rabbit, PawPrint, Map, Grid } from 'lucide-react';
-import PetsMap from '../components/PetsMap';
+import { Heart, X, MapPin, Calendar, Dog, Cat, Bird, Rabbit, PawPrint } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Discover: React.FC = () => {
@@ -15,7 +14,7 @@ const Discover: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<Pet[]>([]);
   const [selectedUserPet, setSelectedUserPet] = useState<Pet | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'map'>('cards');
+  const [hasSearched, setHasSearched] = useState(false); // Flag para saber se já tentou buscar pets
 
   useEffect(() => {
     if (user) {
@@ -46,20 +45,35 @@ const Discover: React.FC = () => {
     }
   };
 
-  const fetchPotentialMatches = async () => {
+  const fetchPotentialMatches = async (append: boolean = false) => {
     if (!selectedUserPet) return;
     
     setLoading(true);
+    setHasSearched(true); // Marca que já tentou buscar
     try {
-      const potentialPets = await matchesAPI.getPotentialMatches(selectedUserPet.id, 10);
-      setPets(potentialPets || []); // Garantir que sempre seja um array
-      setCurrentPetIndex(0);
+      // Aumentar limite para 50 pets para ter mais opções
+      const potentialPets = await matchesAPI.getPotentialMatches(selectedUserPet.id, 50);
+      console.log('Pets encontrados:', potentialPets?.length || 0);
+      
+      if (append) {
+        // Adicionar novos pets aos existentes, evitando duplicatas
+        setPets(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newPets = potentialPets.filter(p => !existingIds.has(p.id));
+          return [...prev, ...newPets];
+        });
+      } else {
+        setPets(potentialPets || []); // Garantir que sempre seja um array
+        setCurrentPetIndex(0);
+      }
     } catch (error) {
       console.error('Erro ao carregar pets potenciais:', error);
       toast.error('Erro ao carregar pets disponíveis.');
       // Se der erro, define pets como array vazio para mostrar mensagem apropriada
-      setPets([]);
-      setCurrentPetIndex(0);
+      if (!append) {
+        setPets([]);
+        setCurrentPetIndex(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -82,11 +96,12 @@ const Discover: React.FC = () => {
       }
       
       // Move to next pet
-      setCurrentPetIndex(prev => prev + 1);
+      const nextIndex = currentPetIndex + 1;
+      setCurrentPetIndex(nextIndex);
       
-      // If we've gone through all pets, fetch more
-      if (currentPetIndex + 1 >= pets.length) {
-        fetchPotentialMatches();
+      // Se estiver próximo do fim (últimos 3 pets), buscar mais
+      if (nextIndex >= pets.length - 3 && pets.length > 0) {
+        fetchPotentialMatches(true); // Append novos pets
       }
     } catch (error) {
       toast.error('Erro ao processar sua escolha.');
@@ -147,41 +162,17 @@ const Discover: React.FC = () => {
     );
   }
 
-  // Verificar se o usuário tem localização configurada
-  const userLocation = useMemo(() => {
-    if (!user?.localizacao_geo) return null;
-    try {
-      return JSON.parse(user.localizacao_geo);
-    } catch {
-      return null;
-    }
-  }, [user]);
-
-  if (!userLocation && pets.length === 0 && !loading) {
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <div className="max-w-md mx-auto mt-20">
-          <MapPin className="h-24 w-24 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Configure sua localização!</h2>
-          <p className="text-gray-600 mb-6">
-            Para encontrar pets próximos, você precisa configurar sua localização nas configurações.
-          </p>
-          <Button onClick={() => (window.location.href = '/settings')}>
-            Ir para Configurações
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (pets.length === 0 || currentPetIndex >= pets.length) {
+  // Só mostra "não há mais pets" se já tentou buscar E não há pets OU já viu todos
+  if (hasSearched && (pets.length === 0 || currentPetIndex >= pets.length)) {
     return (
       <div className="container mx-auto p-4 text-center">
         <div className="max-w-md mx-auto mt-20">
           <Heart className="h-24 w-24 text-gray-400 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Não há mais pets para descobrir!</h2>
           <p className="text-gray-600 mb-6">
-            Você já viu todos os pets disponíveis. Volte mais tarde para ver novos amigos!
+            {pets.length === 0 
+              ? 'Não há pets disponíveis no seu alcance. Tente aumentar o alcance nas configurações ou volte mais tarde!'
+              : 'Você já viu todos os pets disponíveis. Volte mais tarde para ver novos amigos!'}
           </p>
           <Button onClick={fetchPotentialMatches}>
             Buscar Novamente
@@ -191,102 +182,19 @@ const Discover: React.FC = () => {
     );
   }
 
-  const currentPet = pets[currentPetIndex];
-  const maxRange = user?.raio_maximo || 20;
-
-  // Map view
-  if (viewMode === 'map') {
-    return (
-      <div className="container mx-auto p-4 max-w-7xl">
-        <div className="mb-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Pets Próximos</h1>
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'cards' ? 'default' : 'outline'}
-              onClick={() => setViewMode('cards')}
-              size="sm"
-            >
-              <Grid className="h-4 w-4 mr-2" />
-              Cards
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
-              onClick={() => setViewMode('map')}
-              size="sm"
-            >
-              <Map className="h-4 w-4 mr-2" />
-              Mapa
-            </Button>
-          </div>
-        </div>
-
-        {/* Pet Selection */}
-        {userPets.length > 1 && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descobrir para:
-            </label>
-            <select
-              value={selectedUserPet?.id || ''}
-              onChange={(e) => {
-                const pet = userPets.find(p => p.id === e.target.value);
-                setSelectedUserPet(pet || null);
-              }}
-              className="w-full max-w-xs p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
-            >
-              {userPets.map((pet) => (
-                <option key={pet.id} value={pet.id}>
-                  {pet.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="h-[calc(100vh-250px)] rounded-lg overflow-hidden">
-          <PetsMap 
-            pets={pets} 
-            userLocation={userLocation}
-            maxRange={maxRange}
-          />
-        </div>
-
-        {pets.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Nenhum pet encontrado no seu alcance.</p>
-            <p className="text-sm text-gray-500 mt-2">
-              {!userLocation && 'Configure sua localização nas configurações para ver pets próximos.'}
-            </p>
-          </div>
-        )}
-      </div>
-    );
+  // Se ainda não buscou ou não há pets, não renderiza o card ainda
+  if (!hasSearched || pets.length === 0 || currentPetIndex >= pets.length) {
+    return null; // Retorna null enquanto carrega ou não há pets
   }
 
-  // Cards view (original)
+  const currentPet = pets[currentPetIndex];
+  
+  if (!currentPet) {
+    return null; // Segurança adicional
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-md">
-      {/* View Mode Toggle */}
-      <div className="mb-4 flex justify-end">
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'cards' ? 'default' : 'outline'}
-            onClick={() => setViewMode('cards')}
-            size="sm"
-          >
-            <Grid className="h-4 w-4 mr-2" />
-            Cards
-          </Button>
-          <Button
-            variant={viewMode === 'map' ? 'default' : 'outline'}
-            onClick={() => setViewMode('map')}
-            size="sm"
-          >
-            <Map className="h-4 w-4 mr-2" />
-            Mapa
-          </Button>
-        </div>
-      </div>
       {/* Pet Selection */}
       {userPets.length > 1 && (
         <div className="mb-6">

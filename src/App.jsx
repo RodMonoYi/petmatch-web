@@ -11,6 +11,8 @@ import Discover from './pages/Discover';
 import Matches from './pages/Matches';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
+import Search from './pages/Search';
+import PetDetails from './pages/PetDetails';
 import './App.css';
 
 function App() {
@@ -53,6 +55,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MyPets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <Search />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pets/:id"
+              element={
+                <ProtectedRoute>
+                  <PetDetails />
                 </ProtectedRoute>
               }
             />

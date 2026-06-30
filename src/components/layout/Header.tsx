@@ -34,6 +34,12 @@ const Header: React.FC = () => {
                   Descobrir
                 </Link>
                 <Link
+                  to="/search"
+                  className="text-gray-700 hover:text-pink-500 transition-colors"
+                >
+                  Buscar
+                </Link>
+                <Link
                   to="/matches"
                   className="text-gray-700 hover:text-pink-500 transition-colors"
                 >
