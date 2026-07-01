@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, PawPrint } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { RegisterData } from '../types';
+import AuthVisual from '../components/auth/AuthVisual';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterData>({
@@ -45,17 +46,12 @@ const Register: React.FC = () => {
 
   return (
     <div className="auth-shell">
-      <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[0.9fr_1fr] lg:items-center">
-        <div className="hidden lg:block">
-          <p className="page-kicker">Primeiro passo</p>
-          <h1 className="mt-3 text-4xl font-semibold leading-tight text-gray-950">
-            Monte um perfil que ajude outros tutores a decidir.
-          </h1>
-          <p className="mt-4 max-w-md text-lg leading-8 text-gray-600">
-            Depois do cadastro, você pode adicionar seus pets, informar saúde,
-            fotos e preferências de busca.
-          </p>
-        </div>
+      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-[1fr_0.85fr] lg:items-center">
+        <AuthVisual
+          kicker="Primeiro passo"
+          title="Monte um perfil que ajude outros tutores a decidir."
+          description="Depois do cadastro, você pode adicionar seus pets, informar saúde, fotos e preferências de busca."
+        />
 
         <div className="w-full max-w-md justify-self-center space-y-6">
           <div className="text-center">

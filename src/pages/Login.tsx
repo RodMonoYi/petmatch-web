@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, PawPrint } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginData } from '../types';
+import AuthVisual from '../components/auth/AuthVisual';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState<LoginData>({
@@ -42,17 +43,12 @@ const Login: React.FC = () => {
 
   return (
     <div className="auth-shell">
-      <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[0.9fr_1fr] lg:items-center">
-        <div className="hidden lg:block">
-          <p className="page-kicker">Sua área</p>
-          <h1 className="mt-3 text-4xl font-semibold leading-tight text-gray-950">
-            Continue de onde parou.
-          </h1>
-          <p className="mt-4 max-w-md text-lg leading-8 text-gray-600">
-            Veja curtidas recebidas, perfis salvos, matches e conversas sem
-            precisar refazer a busca.
-          </p>
-        </div>
+      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-[1fr_0.85fr] lg:items-center">
+        <AuthVisual
+          kicker="Sua área"
+          title="Continue de onde parou."
+          description="Veja curtidas recebidas, perfis salvos, matches e conversas sem precisar refazer a busca."
+        />
 
         <div className="w-full max-w-md justify-self-center space-y-6">
           <div className="text-center">
