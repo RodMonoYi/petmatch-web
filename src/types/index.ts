@@ -64,6 +64,28 @@ export interface Message {
   remetente?: User;
 }
 
+export type NotificationType = 'like' | 'match' | 'message';
+
+export interface NotificationItem {
+  id: string;
+  tipo: NotificationType;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
+  dados?: {
+    matchId?: string;
+    conversationId?: string;
+    messageId?: string;
+    senderId?: string;
+    sourcePetId?: string;
+    targetPetId?: string;
+    petId?: string;
+  } | null;
+  criado_em: string;
+  lida_em?: string | null;
+  fk_usuario_id: string;
+}
+
 export interface AuthResponse {
   user: User;
   access_token: string;

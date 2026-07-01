@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message } from '../types';
+import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message, NotificationItem } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -105,6 +105,21 @@ export const chatAPI = {
   
   getMessages: (conversationId: string): Promise<Message[]> =>
     api.get(`/chat/conversations/${conversationId}/messages`).then(res => res.data),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: (params?: { limit?: number; unreadOnly?: boolean }): Promise<NotificationItem[]> =>
+    api.get('/notifications', { params }).then(res => res.data),
+
+  getUnreadCount: (): Promise<number> =>
+    api.get('/notifications/unread-count').then(res => Number(res.data)),
+
+  markAsRead: (id: string): Promise<NotificationItem> =>
+    api.patch(`/notifications/${id}/read`).then(res => res.data),
+
+  markAllAsRead: (): Promise<{ unreadCount: number }> =>
+    api.patch('/notifications/read-all').then(res => res.data),
 };
 
 export default api;
