@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Shield, Users, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import SponsorSlot from '../components/ads/SponsorSlot';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -79,6 +80,12 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <div className="bg-white px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SponsorSlot />
+        </div>
+      </div>
 
       {/* Features Section */}
       <section className="py-20 bg-white">
@@ -170,4 +177,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-

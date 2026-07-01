@@ -1,16 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { petsAPI } from '../services/api';
 import { Pet, CreatePetData } from '../types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, Dog, Cat, Bird, Rabbit, PawPrint } from 'lucide-react';
+import {
+  PlusCircle,
+  Edit,
+  Trash2,
+  Dog,
+  Cat,
+  Bird,
+  Rabbit,
+  PawPrint,
+  Trophy,
+  MapPin,
+  Syringe,
+  Heart,
+  Eye,
+  MessageCircle,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
+import SponsorSlot from '../components/ads/SponsorSlot';
+import {
+  getPetStats,
+  getPetStatus,
+  getUserLocationLabel,
+  isAvailableForBreeding,
+  isVaccinated,
+} from '../lib/petPresentation';
 
 const MyPets: React.FC = () => {
   const { user } = useAuth();
@@ -29,6 +54,8 @@ const MyPets: React.FC = () => {
     fotos: [],
     pedigree: false,
     dados_saude: null,
+    disponivel_reproducao: true,
+    aceita_viagem: false,
   });
 
   useEffect(() => {
@@ -128,6 +155,8 @@ const MyPets: React.FC = () => {
       fotos: [],
       pedigree: false,
       dados_saude: null,
+      disponivel_reproducao: true,
+      aceita_viagem: false,
     });
     setIsModalOpen(true);
   };
@@ -145,12 +174,15 @@ const MyPets: React.FC = () => {
       fotos: pet.fotos || [],
       pedigree: pet.pedigree,
       dados_saude: pet.dados_saude || null,
+      disponivel_reproducao: isAvailableForBreeding(pet),
+      aceita_viagem: Boolean(pet.aceita_viagem),
     });
     setIsModalOpen(true);
   };
 
   const getSpeciesIcon = (especie: string) => {
     switch (especie.toLowerCase()) {
+      case 'cão':
       case 'cachorro':
         return <Dog className="h-5 w-5 text-pink-500" />;
       case 'gato':
@@ -182,6 +214,8 @@ const MyPets: React.FC = () => {
         </Button>
       </div>
 
+      <SponsorSlot variant="compact" className="mb-6" />
+
       {pets.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-lg text-gray-600">Você ainda não tem pets cadastrados.</p>
@@ -189,17 +223,29 @@ const MyPets: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pets.map((pet) => (
+          {pets.map((pet) => {
+            const stats = getPetStats(pet);
+            const status = getPetStatus(pet);
+            return (
             <Card key={pet.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-              {pet.fotos && pet.fotos.length > 0 && (
-                <img
-                  src={pet.fotos[0]}
-                  alt={pet.nome}
-                  className="w-full h-48 object-cover"
-                />
-              )}
+              <div className="relative h-48 bg-gray-100">
+                {pet.fotos && pet.fotos.length > 0 ? (
+                  <img
+                    src={pet.fotos[0]}
+                    alt={pet.nome}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <PawPrint className="h-14 w-14 text-gray-300" />
+                  </div>
+                )}
+                <Badge variant="outline" className={`absolute left-3 top-3 border ${status.className}`}>
+                  {status.label}
+                </Badge>
+              </div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                <CardTitle className="text-xl font-bold flex min-w-0 items-center gap-2">
                   {getSpeciesIcon(pet.especie)} {pet.nome}
                 </CardTitle>
                 <div className="flex gap-2">
@@ -211,15 +257,65 @@ const MyPets: React.FC = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600"><b>Espécie:</b> {pet.especie}</p>
-                <p className="text-sm text-gray-600"><b>Raça:</b> {pet.raca}</p>
-                <p className="text-sm text-gray-600"><b>Gênero:</b> {pet.genero}</p>
-                <p className="text-sm text-gray-600"><b>Porte:</b> {pet.porte}</p>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {pet.pedigree && (
+                    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                      <Trophy className="h-3 w-3" />
+                      Pedigree
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700">
+                    <MapPin className="h-3 w-3" />
+                    {getUserLocationLabel(pet.usuario)}
+                  </Badge>
+                  {isVaccinated(pet) && (
+                    <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+                      <Syringe className="h-3 w-3" />
+                      Vacinado
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className={status.className}>
+                    <Heart className="h-3 w-3" />
+                    {status.label}
+                  </Badge>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600"><b>Raça:</b> {pet.raca}</p>
+                  <p className="text-sm text-gray-600"><b>Gênero:</b> {pet.genero}</p>
+                  <p className="text-sm text-gray-600"><b>Porte:</b> {pet.porte}</p>
+                </div>
                 {pet.descricao && <p className="text-sm text-gray-600 mt-2"><b>Descrição:</b> {pet.descricao}</p>}
+
+                <div className="grid grid-cols-3 gap-2 rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-600">
+                  <div>
+                    <Eye className="mx-auto mb-1 h-4 w-4 text-gray-500" />
+                    <span className="font-semibold text-gray-900">{stats.views}</span>
+                    <p>visitas</p>
+                  </div>
+                  <div>
+                    <Heart className="mx-auto mb-1 h-4 w-4 text-pink-500" />
+                    <span className="font-semibold text-gray-900">{stats.likes}</span>
+                    <p>curtidas</p>
+                  </div>
+                  <div>
+                    <MessageCircle className="mx-auto mb-1 h-4 w-4 text-emerald-600" />
+                    <span className="font-semibold text-gray-900">{stats.interested}</span>
+                    <p>interesses</p>
+                  </div>
+                </div>
+
+                <Button asChild className="w-full">
+                  <Link to={`/pets/${pet.id}`}>
+                    <Eye className="h-4 w-4" />
+                    Ver Perfil
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -240,11 +336,11 @@ const MyPets: React.FC = () => {
                   <SelectValue placeholder="Selecione a espécie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cachorro">Cachorro</SelectItem>
-                  <SelectItem value="gato">Gato</SelectItem>
-                  <SelectItem value="passaro">Pássaro</SelectItem>
-                  <SelectItem value="coelho">Coelho</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
+                  <SelectItem value="Cão">Cão</SelectItem>
+                  <SelectItem value="Gato">Gato</SelectItem>
+                  <SelectItem value="Pássaro">Pássaro</SelectItem>
+                  <SelectItem value="Coelho">Coelho</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,8 +359,8 @@ const MyPets: React.FC = () => {
                   <SelectValue placeholder="Selecione o gênero" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="macho">Macho</SelectItem>
-                  <SelectItem value="femea">Fêmea</SelectItem>
+                  <SelectItem value="Macho">Macho</SelectItem>
+                  <SelectItem value="Fêmea">Fêmea</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -275,9 +371,9 @@ const MyPets: React.FC = () => {
                   <SelectValue placeholder="Selecione o porte" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pequeno">Pequeno</SelectItem>
-                  <SelectItem value="medio">Médio</SelectItem>
-                  <SelectItem value="grande">Grande</SelectItem>
+                  <SelectItem value="Pequeno">Pequeno</SelectItem>
+                  <SelectItem value="Médio">Médio</SelectItem>
+                  <SelectItem value="Grande">Grande</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -303,6 +399,14 @@ const MyPets: React.FC = () => {
               <Label htmlFor="pedigree" className="text-right">Pedigree</Label>
               <input id="pedigree" name="pedigree" type="checkbox" checked={formData.pedigree} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="disponivel_reproducao" className="text-right">Disponível</Label>
+              <input id="disponivel_reproducao" name="disponivel_reproducao" type="checkbox" checked={Boolean(formData.disponivel_reproducao)} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="aceita_viagem" className="text-right">Aceita viagem</Label>
+              <input id="aceita_viagem" name="aceita_viagem" type="checkbox" checked={Boolean(formData.aceita_viagem)} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
+            </div>
           </form>
           <DialogFooter>
             <Button type="submit" onClick={handleSubmit}>{currentPet ? 'Salvar Alterações' : 'Cadastrar Pet'}</Button>
@@ -314,4 +418,3 @@ const MyPets: React.FC = () => {
 };
 
 export default MyPets;
-

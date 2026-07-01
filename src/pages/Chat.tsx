@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, MessageCircle, Heart } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, MessageCircle, Heart, Eye, MapPin } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { chatAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { getUserLocationLabel } from '../lib/petPresentation';
 
 interface Message {
   id: string;
@@ -31,20 +32,30 @@ interface Conversation {
   participante1: {
     id: string;
     nome: string;
+    localizacao_geo?: string;
   };
   participante2: {
     id: string;
     nome: string;
+    localizacao_geo?: string;
   };
   match: {
     id: string;
     pet1: {
+      id: string;
       nome: string;
       especie: string;
+      raca?: string;
+      fotos?: string[] | string;
+      fk_usuario_id?: string;
     };
     pet2: {
+      id: string;
       nome: string;
       especie: string;
+      raca?: string;
+      fotos?: string[] | string;
+      fk_usuario_id?: string;
     };
   };
   ultimaMensagem?: Message;
@@ -201,6 +212,37 @@ const Chat: React.FC = () => {
       : conversation.participante1;
   };
 
+  const getOtherPet = (conversation: Conversation) => {
+    if (conversation.match.pet1.fk_usuario_id && conversation.match.pet1.fk_usuario_id !== user?.id) {
+      return conversation.match.pet1;
+    }
+
+    if (conversation.match.pet2.fk_usuario_id && conversation.match.pet2.fk_usuario_id !== user?.id) {
+      return conversation.match.pet2;
+    }
+
+    return conversation.fk_participante_1_id === user?.id
+      ? conversation.match.pet2
+      : conversation.match.pet1;
+  };
+
+  const getPetImage = (pet: Conversation['match']['pet1']) => {
+    if (Array.isArray(pet.fotos)) {
+      return pet.fotos[0];
+    }
+
+    if (typeof pet.fotos === 'string') {
+      try {
+        const parsedPhotos = JSON.parse(pet.fotos);
+        return Array.isArray(parsedPhotos) ? parsedPhotos[0] : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    return null;
+  };
+
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
@@ -242,6 +284,8 @@ const Chat: React.FC = () => {
                 ) : (
                   conversations.map((conversation) => {
                     const otherParticipant = getOtherParticipant(conversation);
+                    const otherPet = getOtherPet(conversation);
+                    const otherPetImage = getPetImage(otherPet);
                     return (
                       <div
                         key={conversation.id}
@@ -251,17 +295,25 @@ const Chat: React.FC = () => {
                         onClick={() => setSelectedConversation(conversation)}
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar>
+                          <Avatar className="size-11">
+                            {otherPetImage && <AvatarImage src={otherPetImage} alt={otherPet.nome} />}
                             <AvatarFallback className="bg-pink-100 text-pink-600">
-                              {otherParticipant.nome.charAt(0).toUpperCase()}
+                              {otherPet.nome.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 truncate">
-                              {otherParticipant.nome}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-medium text-gray-900 truncate">
+                                {otherPet.nome}
+                              </p>
+                              {conversation.ultimaMensagem && (
+                                <span className="text-xs text-gray-400">
+                                  {formatTime(conversation.ultimaMensagem.enviada_em)}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-500 truncate">
-                              {conversation.match.pet1.nome} ❤️ {conversation.match.pet2.nome}
+                              {otherParticipant.nome} • {otherPet.raca || otherPet.especie}
                             </p>
                             {conversation.ultimaMensagem && (
                               <p className="text-xs text-gray-400 truncate">
@@ -269,6 +321,7 @@ const Chat: React.FC = () => {
                               </p>
                             )}
                           </div>
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                         </div>
                       </div>
                     );
@@ -283,19 +336,37 @@ const Chat: React.FC = () => {
             {selectedConversation ? (
               <>
                 <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-3">
-                    <Avatar>
+                  {(() => {
+                    const otherParticipant = getOtherParticipant(selectedConversation);
+                    const otherPet = getOtherPet(selectedConversation);
+                    const otherPetImage = getPetImage(otherPet);
+
+                    return (
+                  <CardTitle className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="size-11">
+                      {otherPetImage && <AvatarImage src={otherPetImage} alt={otherPet.nome} />}
                       <AvatarFallback className="bg-pink-100 text-pink-600">
-                        {getOtherParticipant(selectedConversation).nome.charAt(0).toUpperCase()}
+                        {otherPet.nome.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium">{getOtherParticipant(selectedConversation).nome}</p>
-                      <p className="text-sm text-gray-500 font-normal">
-                        Match: {selectedConversation.match.pet1.nome} ❤️ {selectedConversation.match.pet2.nome}
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{otherPet.nome}</p>
+                      <p className="flex items-center gap-1 text-sm text-gray-500 font-normal">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {getUserLocationLabel(otherParticipant)} • Tutor: {otherParticipant.nome}
                       </p>
                     </div>
+                    </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to={`/pets/${otherPet.id}`}>
+                        <Eye className="h-4 w-4" />
+                        Ver Perfil
+                      </Link>
+                    </Button>
                   </CardTitle>
+                    );
+                  })()}
                 </CardHeader>
                 <CardContent className="p-0 flex flex-col h-[calc(100vh-16rem)]">
                   {/* Mensagens */}

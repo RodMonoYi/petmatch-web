@@ -4,8 +4,9 @@ import { matchesAPI, petsAPI } from '../services/api';
 import { Match, Pet } from '../types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, Heart, Dog, Cat, Bird, Rabbit, PawPrint, Calendar, MapPin } from 'lucide-react';
+import { MessageCircle, Heart, Dog, Cat, Bird, Rabbit, PawPrint, Calendar, MapPin, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SponsorSlot from '../components/ads/SponsorSlot';
 
 const Matches: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ const Matches: React.FC = () => {
   const [userPets, setUserPets] = useState<Pet[]>([]);
   const [selectedUserPet, setSelectedUserPet] = useState<Pet | null>(null);
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
+  const [stats, setStats] = useState({ swipes: 0, likes: 0, matches: 0 });
 
   useEffect(() => {
     if (user) {
@@ -43,7 +45,9 @@ const Matches: React.FC = () => {
     setLoading(true);
     try {
       const userMatches = await matchesAPI.getMyMatches();
+      const userStats = await matchesAPI.getMyStats();
       setMatches(userMatches);
+      setStats(userStats);
     } catch (error) {
       toast.error('Erro ao carregar seus matches.');
       console.error('Erro ao carregar matches:', error);
@@ -161,6 +165,8 @@ const Matches: React.FC = () => {
         </div>
       </div>
 
+      <SponsorSlot variant="compact" className="mb-6" />
+
       {/* Pet Filter */}
       {userPets.length > 1 && (
         <div className="mb-6">
@@ -186,13 +192,19 @@ const Matches: React.FC = () => {
       )}
 
       {filteredMatches.length === 0 ? (
-        <div className="text-center py-20">
-          <Heart className="h-24 w-24 text-gray-300 mx-auto mb-6" />
+        <div className="mx-auto max-w-2xl py-16 text-center">
+          <div className="mx-auto mb-6 flex h-40 w-40 items-center justify-center rounded-full bg-pink-50">
+            <div className="relative">
+              <PawPrint className="h-20 w-20 -rotate-12 text-pink-300" />
+              <Heart className="absolute -right-6 -top-4 h-12 w-12 fill-pink-500 text-pink-500" />
+              <Sparkles className="absolute -bottom-3 -right-2 h-8 w-8 text-amber-400" />
+            </div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-600 mb-4">
             {selectedUserPet ? `${selectedUserPet.nome} ainda não tem matches` : 'Você ainda não tem matches'}
           </h2>
           <p className="text-gray-500 mb-6">
-            Continue descobrindo novos pets para encontrar seu match perfeito!
+            Você já curtiu {stats.likes} {stats.likes === 1 ? 'pet' : 'pets'}. Continue descobrindo para encontrar combinações compatíveis.
           </p>
           <Button onClick={() => window.location.href = '/discover'}>
             Descobrir Pets

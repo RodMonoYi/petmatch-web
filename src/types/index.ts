@@ -22,6 +22,8 @@ export interface Pet {
   pedigree: boolean;
   dados_saude?: any;
   verificado_clinica: boolean;
+  disponivel_reproducao?: boolean;
+  aceita_viagem?: boolean;
   fk_usuario_id: string;
   usuario?: User;
   distancia_km?: number; // Distância em km (adicionado no getPotentialMatches)
@@ -91,6 +93,8 @@ export interface CreatePetData {
   fotos?: string[];
   pedigree?: boolean;
   dados_saude?: any;
+  disponivel_reproducao?: boolean;
+  aceita_viagem?: boolean;
 }
 
 export interface SearchPetsParams {
@@ -98,6 +102,12 @@ export interface SearchPetsParams {
   raca?: string;
   genero?: string;
   porte?: string;
+  pedigree?: boolean;
+  vacinado?: boolean;
+  disponivel_reproducao?: boolean;
+  aceita_viagem?: boolean;
+  idade_min?: number;
+  idade_max?: number;
   latitude?: number;
   longitude?: number;
   raio?: number;
@@ -112,4 +122,3 @@ export interface PetsResponse {
   limit: number;
   totalPages: number;
 }
-

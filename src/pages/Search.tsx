@@ -1,15 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { petsAPI } from '../services/api';
+import { matchesAPI, petsAPI } from '../services/api';
 import { Pet, PetsResponse } from '../types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search as SearchIcon, MapPin, Calendar, Dog, Cat, Heart, Filter, X, ArrowRight } from 'lucide-react';
+import {
+  Search as SearchIcon,
+  MapPin,
+  Calendar,
+  Dog,
+  Cat,
+  Heart,
+  Filter,
+  X,
+  Eye,
+  Star,
+  Syringe,
+  Trophy,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SponsorSlot from '../components/ads/SponsorSlot';
+import {
+  calculatePetAge,
+  getPetStatus,
+  getUserLocationLabel,
+  isVaccinated,
+} from '../lib/petPresentation';
 
 const Search: React.FC = () => {
   const { user } = useAuth();
@@ -19,6 +40,8 @@ const Search: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [hasSelectedSpecies, setHasSelectedSpecies] = useState(false);
+  const [userPets, setUserPets] = useState<Pet[]>([]);
+  const [favoritePets, setFavoritePets] = useState<Set<string>>(new Set());
   
   // Filtros
   const [filters, setFilters] = useState({
@@ -27,9 +50,24 @@ const Search: React.FC = () => {
     genero: '',
     porte: '',
     searchTerm: '',
+    idadeMin: '',
+    idadeMax: '',
+    distancia: '',
+    pedigree: 'all',
+    vacinado: 'all',
+    disponivel: 'all',
+    aceitaViagem: 'all',
   });
 
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      petsAPI.getMyPets()
+        .then((myPets) => setUserPets(myPets || []))
+        .catch(() => setUserPets([]));
+    }
+  }, [user]);
 
   // Só busca quando espécie for selecionada
   useEffect(() => {
@@ -67,6 +105,24 @@ const Search: React.FC = () => {
       if (filters.porte && filters.porte !== 'all') {
         params.porte = filters.porte;
       }
+      if (filters.idadeMin) {
+        params.idade_min = Number(filters.idadeMin);
+      }
+      if (filters.idadeMax) {
+        params.idade_max = Number(filters.idadeMax);
+      }
+      if (filters.pedigree !== 'all') {
+        params.pedigree = filters.pedigree === 'true';
+      }
+      if (filters.vacinado !== 'all') {
+        params.vacinado = filters.vacinado === 'true';
+      }
+      if (filters.disponivel !== 'all') {
+        params.disponivel_reproducao = filters.disponivel === 'true';
+      }
+      if (filters.aceitaViagem !== 'all') {
+        params.aceita_viagem = filters.aceitaViagem === 'true';
+      }
 
       // Se tiver localização, usar para filtrar por distância
       if (user?.localizacao_geo) {
@@ -74,7 +130,7 @@ const Search: React.FC = () => {
           const location = JSON.parse(user.localizacao_geo);
           params.latitude = location.latitude;
           params.longitude = location.longitude;
-          params.raio = user.raio_maximo || 50; // Alcance maior para busca
+          params.raio = filters.distancia ? Number(filters.distancia) : user.raio_maximo || 50;
         } catch (e) {
           // Ignorar erro
         }
@@ -116,6 +172,13 @@ const Search: React.FC = () => {
       genero: '',
       porte: '',
       searchTerm: '',
+      idadeMin: '',
+      idadeMax: '',
+      distancia: '',
+      pedigree: 'all',
+      vacinado: 'all',
+      disponivel: 'all',
+      aceitaViagem: 'all',
     });
     setPage(1);
   };
@@ -128,24 +191,18 @@ const Search: React.FC = () => {
       genero: '',
       porte: '',
       searchTerm: '',
+      idadeMin: '',
+      idadeMax: '',
+      distancia: '',
+      pedigree: 'all',
+      vacinado: 'all',
+      disponivel: 'all',
+      aceitaViagem: 'all',
     });
     setPets([]);
     setPage(1);
     setTotal(0);
     setTotalPages(1);
-  };
-
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const ageInMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-    
-    if (ageInMonths < 12) {
-      return `${ageInMonths} ${ageInMonths === 1 ? 'mês' : 'meses'}`;
-    } else {
-      const years = Math.floor(ageInMonths / 12);
-      return `${years} ${years === 1 ? 'ano' : 'anos'}`;
-    }
   };
 
   const getSpeciesIcon = (especie: string) => {
@@ -160,6 +217,57 @@ const Search: React.FC = () => {
     }
   };
 
+  const hasActiveFilters = Boolean(
+    filters.raca ||
+    filters.genero ||
+    filters.porte ||
+    filters.searchTerm ||
+    filters.idadeMin ||
+    filters.idadeMax ||
+    filters.distancia ||
+    filters.pedigree !== 'all' ||
+    filters.vacinado !== 'all' ||
+    filters.disponivel !== 'all' ||
+    filters.aceitaViagem !== 'all'
+  );
+
+  const toggleFavorite = (petId: string) => {
+    setFavoritePets((prev) => {
+      const next = new Set(prev);
+      if (next.has(petId)) {
+        next.delete(petId);
+      } else {
+        next.add(petId);
+      }
+      return next;
+    });
+  };
+
+  const handleQuickLike = async (pet: Pet) => {
+    const compatiblePet = userPets.find((userPet) => (
+      userPet.especie === pet.especie &&
+      userPet.genero !== pet.genero &&
+      userPet.id !== pet.id
+    ));
+
+    if (!compatiblePet) {
+      toast.error('Cadastre ou selecione um pet compatível para curtir.');
+      return;
+    }
+
+    try {
+      const result = await matchesAPI.swipe(compatiblePet.id, pet.id, 'like');
+      if (result.isMatch) {
+        toast.success(`É um match com ${pet.nome}!`);
+      } else {
+        toast.success(`Você curtiu ${pet.nome}.`);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Erro ao curtir pet.';
+      toast.error(message);
+    }
+  };
+
   // Tela inicial - seleção de espécie
   if (!hasSelectedSpecies) {
     return (
@@ -168,6 +276,8 @@ const Search: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Marketplace de Pets</h1>
           <p className="text-xl text-gray-600">Encontre pets para reprodução por raça, espécie e muito mais</p>
         </div>
+
+        <SponsorSlot className="mb-6" />
 
         <Card className="p-8">
           <div className="text-center mb-8">
@@ -253,7 +363,7 @@ const Search: React.FC = () => {
             Filtros
             {showFilters && <X className="h-4 w-4" />}
           </Button>
-          {(filters.raca || filters.genero || filters.porte || filters.searchTerm) && (
+          {hasActiveFilters && (
             <Button variant="ghost" onClick={clearFilters} size="sm">
               Limpar Filtros
             </Button>
@@ -263,7 +373,7 @@ const Search: React.FC = () => {
         {/* Painel de filtros */}
         {showFilters && (
           <Card className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="genero">Gênero</Label>
                 <Select
@@ -308,10 +418,125 @@ const Search: React.FC = () => {
                   onChange={(e) => handleFilterChange('raca', e.target.value)}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="distancia">Distância</Label>
+                <Select
+                  value={filters.distancia || undefined}
+                  onValueChange={(value) => handleFilterChange('distancia', value)}
+                >
+                  <SelectTrigger id="distancia">
+                    <SelectValue placeholder="Alcance padrão" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">Até 5 km</SelectItem>
+                    <SelectItem value="10">Até 10 km</SelectItem>
+                    <SelectItem value="20">Até 20 km</SelectItem>
+                    <SelectItem value="50">Até 50 km</SelectItem>
+                    <SelectItem value="100">Até 100 km</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="idadeMin">Idade mínima</Label>
+                <Input
+                  id="idadeMin"
+                  type="number"
+                  min="0"
+                  max="30"
+                  placeholder="0"
+                  value={filters.idadeMin}
+                  onChange={(e) => handleFilterChange('idadeMin', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="idadeMax">Idade máxima</Label>
+                <Input
+                  id="idadeMax"
+                  type="number"
+                  min="0"
+                  max="30"
+                  placeholder="8"
+                  value={filters.idadeMax}
+                  onChange={(e) => handleFilterChange('idadeMax', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="pedigree">Pedigree</Label>
+                <Select
+                  value={filters.pedigree}
+                  onValueChange={(value) => handleFilterChange('pedigree', value)}
+                >
+                  <SelectTrigger id="pedigree">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="true">Com pedigree</SelectItem>
+                    <SelectItem value="false">Sem pedigree</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="vacinado">Vacinação</Label>
+                <Select
+                  value={filters.vacinado}
+                  onValueChange={(value) => handleFilterChange('vacinado', value)}
+                >
+                  <SelectTrigger id="vacinado">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="true">Vacinado</SelectItem>
+                    <SelectItem value="false">Não vacinado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="disponivel">Disponibilidade</Label>
+                <Select
+                  value={filters.disponivel}
+                  onValueChange={(value) => handleFilterChange('disponivel', value)}
+                >
+                  <SelectTrigger id="disponivel">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="true">Disponível</SelectItem>
+                    <SelectItem value="false">Não disponível</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="aceitaViagem">Aceita viagem</Label>
+                <Select
+                  value={filters.aceitaViagem}
+                  onValueChange={(value) => handleFilterChange('aceitaViagem', value)}
+                >
+                  <SelectTrigger id="aceitaViagem">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="true">Sim</SelectItem>
+                    <SelectItem value="false">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </Card>
         )}
       </div>
+
+      <SponsorSlot variant="compact" className="mb-6" />
 
       {/* Resultados */}
       {loading ? (
@@ -339,55 +564,103 @@ const Search: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {pets.map((pet) => (
-              <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                <Link to={`/pets/${pet.id}`}>
+            {pets.map((pet) => {
+              const status = getPetStatus(pet);
+              const isFavorite = favoritePets.has(pet.id);
+
+              return (
+              <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-48 bg-gray-100">
                   {pet.fotos && pet.fotos.length > 0 ? (
-                    <div className="relative h-48">
-                      <img
-                        src={pet.fotos[0]}
-                        alt={pet.nome}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2 right-2">
-                        {getSpeciesIcon(pet.especie)}
-                      </div>
-                    </div>
+                    <img
+                      src={pet.fotos[0]}
+                      alt={pet.nome}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
-                    <div className="h-48 bg-gray-200 flex items-center justify-center">
+                    <div className="flex h-full items-center justify-center">
                       <Heart className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
+                  <div className="absolute right-2 top-2 rounded-full bg-white p-2 shadow-sm">
+                    {getSpeciesIcon(pet.especie)}
+                  </div>
+                  <Badge variant="outline" className={`absolute left-2 top-2 border ${status.className}`}>
+                    {status.label}
+                  </Badge>
+                </div>
                   
-                  <CardContent className="p-4">
-                    <h3 className="font-bold text-lg mb-1">{pet.nome}</h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{pet.raca}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{pet.especie} • {pet.genero} • {pet.porte}</span>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {calculateAge(pet.data_nascimento)}
-                      </div>
-                      {pet.descricao && (
-                        <p className="text-xs text-gray-500 line-clamp-2 mt-2">
-                          {pet.descricao}
-                        </p>
-                      )}
-                      {pet.pedigree && (
-                        <div className="inline-block px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded mt-2">
-                          Com Pedigree
-                        </div>
-                      )}
+                <CardContent className="space-y-4 p-4">
+                  <div>
+                    <div className="mb-1 flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-lg leading-tight">{pet.nome}</h3>
+                      <span className="text-xs font-medium text-gray-500">{calculatePetAge(pet.data_nascimento)}</span>
                     </div>
-                  </CardContent>
-                </Link>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {pet.raca}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {getUserLocationLabel(pet.usuario)}
+                        {pet.distancia_km ? ` • ${pet.distancia_km.toFixed(1)} km` : ''}
+                      </p>
+                      <p>{pet.genero} • {pet.porte}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                      {pet.pedigree && (
+                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                          <Trophy className="h-3 w-3" />
+                          Pedigree
+                        </Badge>
+                      )}
+                      {isVaccinated(pet) && (
+                        <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+                          <Syringe className="h-3 w-3" />
+                          Vacinado
+                        </Badge>
+                      )}
+                      {pet.aceita_viagem && (
+                        <Badge variant="outline" className="border-violet-200 bg-violet-50 text-violet-700">
+                          <MapPin className="h-3 w-3" />
+                          Aceita viagem
+                        </Badge>
+                      )}
+                  </div>
+
+                  {pet.descricao && (
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                      {pet.descricao}
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleQuickLike(pet)}>
+                      <Heart className="h-4 w-4 text-pink-500" />
+                      Curtir
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={isFavorite ? 'default' : 'outline'}
+                      onClick={() => toggleFavorite(pet.id)}
+                    >
+                      <Star className="h-4 w-4" />
+                      Salvar
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to={`/pets/${pet.id}`}>
+                        <Eye className="h-4 w-4" />
+                        Perfil
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
 
           {/* Paginação */}

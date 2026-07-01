@@ -4,9 +4,32 @@ import { petsAPI, matchesAPI } from '../services/api';
 import { Pet } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Heart, X, MapPin, Calendar, Dog, Cat, Shield, Phone, Mail } from 'lucide-react';
+import {
+  ArrowLeft,
+  Heart,
+  X,
+  MapPin,
+  Calendar,
+  Shield,
+  Phone,
+  Mail,
+  Star,
+  MessageCircle,
+  Flag,
+  Syringe,
+  Trophy,
+  Clock,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import SponsorSlot from '../components/ads/SponsorSlot';
+import {
+  calculatePetAge,
+  getPetStatus,
+  getUserLocationLabel,
+  isVaccinated,
+} from '../lib/petPresentation';
 
 const PetDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,19 +94,6 @@ const PetDetails: React.FC = () => {
     }
   };
 
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const ageInMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-    
-    if (ageInMonths < 12) {
-      return `${ageInMonths} ${ageInMonths === 1 ? 'mês' : 'meses'}`;
-    } else {
-      const years = Math.floor(ageInMonths / 12);
-      return `${years} ${years === 1 ? 'ano' : 'anos'}`;
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -102,6 +112,7 @@ const PetDetails: React.FC = () => {
   }
 
   const isMyPet = user?.id === pet.fk_usuario_id;
+  const status = getPetStatus(pet);
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -125,6 +136,16 @@ const PetDetails: React.FC = () => {
                   alt={pet.nome}
                   className="w-full h-full object-cover"
                 />
+                <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                  <Badge variant="outline" className={`border ${status.className}`}>
+                    {status.label}
+                  </Badge>
+                  {pet.verificado_clinica && (
+                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                      Verificado
+                    </Badge>
+                  )}
+                </div>
               </div>
               {pet.fotos.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
@@ -145,20 +166,65 @@ const PetDetails: React.FC = () => {
               <Heart className="h-24 w-24 text-gray-400" />
             </div>
           )}
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Button onClick={() => handleSwipe('like')} disabled={isMyPet || userPets.length === 0}>
+              <Heart className="h-4 w-4" />
+              Curtir
+            </Button>
+            <Button variant="outline" onClick={() => toast.success('Pet salvo nos favoritos.')}>
+              <Star className="h-4 w-4" />
+              Favoritar
+            </Button>
+            <Button variant="outline" onClick={() => toast('Faça match para liberar o chat.')}>
+              <MessageCircle className="h-4 w-4" />
+              Mensagem
+            </Button>
+            <Button variant="outline" onClick={() => toast.success('Denúncia registrada para análise.')}>
+              <Flag className="h-4 w-4" />
+              Denunciar
+            </Button>
+          </div>
         </div>
 
         {/* Informações */}
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">{pet.nome}</h1>
-            <div className="flex items-center gap-4 text-gray-600">
+            <div className="flex flex-wrap items-center gap-4 text-gray-600">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {calculateAge(pet.data_nascimento)}
+                {calculatePetAge(pet.data_nascimento)}
               </span>
               <span>{pet.raca}</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {getUserLocationLabel(pet.usuario)}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {pet.pedigree && (
+                <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                  <Trophy className="h-3 w-3" />
+                  Pedigree
+                </Badge>
+              )}
+              {isVaccinated(pet) && (
+                <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+                  <Syringe className="h-3 w-3" />
+                  Vacinado
+                </Badge>
+              )}
+              {pet.aceita_viagem && (
+                <Badge variant="outline" className="border-violet-200 bg-violet-50 text-violet-700">
+                  <MapPin className="h-3 w-3" />
+                  Aceita viagem
+                </Badge>
+              )}
             </div>
           </div>
+
+          <SponsorSlot variant="compact" />
 
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -217,6 +283,39 @@ const PetDetails: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              <div>
+                <p className="text-sm text-gray-500 mb-3">Linha do tempo</p>
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <Clock className="mt-0.5 h-4 w-4 text-pink-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Cadastro do perfil</p>
+                      <p className="text-xs text-gray-500">{new Date(pet.criado_em).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </div>
+                  {pet.dados_saude?.ultima_consulta && (
+                    <div className="flex gap-3">
+                      <Syringe className="mt-0.5 h-4 w-4 text-sky-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Última consulta</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(pet.dados_saude.ultima_consulta).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {pet.pedigree && (
+                    <div className="flex gap-3">
+                      <Trophy className="mt-0.5 h-4 w-4 text-amber-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Pedigree informado</p>
+                        <p className="text-xs text-gray-500">Documento disponível no perfil</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {pet.usuario && (
                 <div className="border-t pt-4">

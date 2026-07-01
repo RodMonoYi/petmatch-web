@@ -1,12 +1,15 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Heart, User, LogOut, MessageCircle, Settings } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Bell, ChevronDown, Heart, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const notificationCount = isAuthenticated ? 3 : 0;
+  const userInitial = user?.nome?.charAt(0).toUpperCase() || 'U';
 
   const handleLogout = () => {
     logout();
@@ -79,7 +82,19 @@ const Header: React.FC = () => {
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  className="relative rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500"
+                  aria-label="Notificações"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs font-semibold text-white">
+                      {notificationCount}
+                    </span>
+                  )}
+                </button>
                 <Link
                   to="/settings"
                   className="text-gray-700 hover:text-pink-500 transition-colors"
@@ -87,7 +102,18 @@ const Header: React.FC = () => {
                 >
                   <Settings className="h-5 w-5" />
                 </Link>
-                <span className="text-gray-700 hidden sm:inline">Olá, {user?.nome}</span>
+                <Link
+                  to="/settings"
+                  className="hidden items-center gap-2 rounded-md px-2 py-1.5 text-gray-700 transition-colors hover:bg-gray-50 hover:text-pink-500 sm:flex"
+                >
+                  <Avatar className="size-8">
+                    <AvatarFallback className="bg-pink-100 text-sm font-semibold text-pink-700">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-32 truncate font-medium">{user?.nome}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Link>
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair

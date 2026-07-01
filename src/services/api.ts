@@ -84,6 +84,9 @@ export const matchesAPI = {
   
   getMyMatches: (): Promise<Match[]> =>
     api.get('/matches/my-matches').then(res => res.data),
+
+  getMyStats: (): Promise<{ swipes: number; likes: number; matches: number }> =>
+    api.get('/matches/my-stats').then(res => res.data),
   
   getPotentialMatches: (petId: string, limit?: number): Promise<Pet[]> =>
     api.get(`/matches/potential/${petId}`, { params: { limit } }).then(res => res.data),
@@ -105,4 +108,3 @@ export const chatAPI = {
 };
 
 export default api;
-
