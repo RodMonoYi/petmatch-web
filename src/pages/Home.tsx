@@ -113,7 +113,7 @@ const Home: React.FC = () => {
               </span>
               <span className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-rose-200" />
-                Proximidade
+                Buscar por proximidade
               </span>
             </div>
           </div>

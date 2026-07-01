@@ -16,6 +16,7 @@ import Search from './pages/Search';
 import PetDetails from './pages/PetDetails';
 import SavedPets from './pages/SavedPets';
 import Profile from './pages/Profile';
+import TermsOfUse from './pages/TermsOfUse';
 import './App.css';
 
 const PublicOnlyRoute = ({ children }) => {
@@ -61,6 +62,7 @@ function App() {
               />
               <Route path="/sobre" element={<Home />} />
               <Route path="/about" element={<Home />} />
+              <Route path="/terms" element={<TermsOfUse />} />
               <Route
                 path="/register"
                 element={

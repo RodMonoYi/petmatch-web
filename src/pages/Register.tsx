@@ -16,6 +16,7 @@ const Register: React.FC = () => {
     telefone: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
@@ -157,21 +158,33 @@ const Register: React.FC = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <div className="flex items-start gap-3 rounded-lg border border-stone-200 bg-stone-50/70 p-3">
+                  <input
+                    id="acceptedTerms"
+                    type="checkbox"
+                    required
+                    checked={acceptedTerms}
+                    onChange={(event) => setAcceptedTerms(event.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-stone-300 text-rose-700 focus:ring-rose-600"
+                  />
+                  <label
+                    htmlFor="acceptedTerms"
+                    className="text-sm leading-6 text-gray-600"
+                  >
+                    Ao registrar, concordo que li e concordo com os{' '}
+                    <Link
+                      to="/terms"
+                      className="font-medium text-rose-700 underline underline-offset-2 hover:text-rose-800"
+                    >
+                      termos de uso
+                    </Link>
+                    .
+                  </label>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
                   {loading ? 'Criando conta...' : 'Criar conta'}
                 </Button>
-
-                <div className="text-center text-xs leading-5 text-gray-500">
-                  Ao criar uma conta, você concorda com nossos{' '}
-                  <Link to="/terms" className="text-rose-700 hover:text-rose-800">
-                    Termos de Uso
-                  </Link>{' '}
-                  e{' '}
-                  <Link to="/privacy" className="text-rose-700 hover:text-rose-800">
-                    Política de Privacidade
-                  </Link>
-                  .
-                </div>
               </form>
             </CardContent>
           </Card>
