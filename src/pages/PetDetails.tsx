@@ -39,18 +39,43 @@ const PetDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<Pet[]>([]);
   const [selectedUserPet, setSelectedUserPet] = useState<Pet | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [liking, setLiking] = useState(false);
 
   useEffect(() => {
     if (id) {
+      setSelectedUserPet(null);
       fetchPetDetails();
       fetchUserPets();
     }
   }, [id]);
 
+  useEffect(() => {
+    if (!pet || userPets.length === 0) return;
+
+    const compatiblePet = userPets.find((userPet) => (
+      userPet.especie === pet.especie &&
+      userPet.genero !== pet.genero &&
+      userPet.id !== pet.id
+    ));
+    const sameSpeciesPet = userPets.find((userPet) => (
+      userPet.especie === pet.especie &&
+      userPet.id !== pet.id
+    ));
+
+    if (!selectedUserPet) {
+      setSelectedUserPet(compatiblePet || sameSpeciesPet || userPets[0]);
+      return;
+    }
+
+  }, [pet, selectedUserPet, userPets]);
+
   const fetchPetDetails = async () => {
     try {
       const petData = await petsAPI.getById(id!);
       setPet(petData);
+      setIsSaved(Boolean(petData.salvo));
     } catch (error) {
       console.error('Erro ao carregar pet:', error);
       toast.error('Pet não encontrado.');
@@ -64,9 +89,6 @@ const PetDetails: React.FC = () => {
     try {
       const myPets = await petsAPI.getMyPets();
       setUserPets(myPets || []);
-      if (myPets && myPets.length > 0) {
-        setSelectedUserPet(myPets[0]);
-      }
     } catch (error) {
       console.error('Erro ao carregar seus pets:', error);
     }
@@ -75,13 +97,56 @@ const PetDetails: React.FC = () => {
   const handleSwipe = async (action: 'like' | 'dislike') => {
     if (!selectedUserPet || !pet) return;
 
+    if (selectedUserPet.especie !== pet.especie) {
+      toast.error('Você precisa selecionar um pet da mesma espécie.');
+      return;
+    }
+
+    if (selectedUserPet.genero === pet.genero) {
+      toast.error('Para reprodução, os pets precisam ter gêneros opostos.');
+      return;
+    }
+
+    const isLikedBySelectedPet = Boolean(
+      selectedUserPet && pet.curtido_por_pet_ids?.includes(selectedUserPet.id),
+    );
+
+    if (action === 'like' && isLikedBySelectedPet) {
+      toast('Você já curtiu este pet.');
+      return;
+    }
+
+    if (action === 'like') {
+      setLiking(true);
+    }
+
     try {
       const result = await matchesAPI.swipe(selectedUserPet.id, pet.id, action);
       
       if (action === 'like') {
+        setPet((currentPet) =>
+          {
+            if (!currentPet || !selectedUserPet) return currentPet;
+
+            const likedByPetIds = new Set(currentPet.curtido_por_pet_ids || []);
+            likedByPetIds.add(selectedUserPet.id);
+
+            return {
+              ...currentPet,
+              curtido: true,
+              curtido_por_pet_ids: Array.from(likedByPetIds),
+              curtidas_count: result.alreadySwiped
+                ? currentPet.curtidas_count
+                : (currentPet.curtidas_count || 0) + 1,
+            };
+          },
+        );
+
         if (result.isMatch) {
           toast.success(`🎉 É um match! Você e ${pet.nome} se gostaram!`);
           navigate('/matches');
+        } else if (result.alreadySwiped) {
+          toast('Você já curtiu este pet.');
         } else {
           toast.success(`❤️ Você curtiu ${pet.nome}!`);
         }
@@ -91,6 +156,45 @@ const PetDetails: React.FC = () => {
     } catch (error: any) {
       const message = error.response?.data?.message || 'Erro ao processar sua escolha.';
       toast.error(message);
+    } finally {
+      if (action === 'like') {
+        setLiking(false);
+      }
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!pet) return;
+
+    if (isMyPet) {
+      toast.error('Seu próprio pet já fica disponível em Meus Pets.');
+      return;
+    }
+
+    const previousSaved = isSaved;
+    setSaving(true);
+    setIsSaved(!previousSaved);
+    setPet((currentPet) =>
+      currentPet ? { ...currentPet, salvo: !previousSaved } : currentPet,
+    );
+
+    try {
+      if (previousSaved) {
+        await petsAPI.unsave(pet.id);
+        toast.success(`${pet.nome} removido dos salvos.`);
+      } else {
+        await petsAPI.save(pet.id);
+        toast.success(`${pet.nome} salvo.`);
+      }
+    } catch (error: any) {
+      setIsSaved(previousSaved);
+      setPet((currentPet) =>
+        currentPet ? { ...currentPet, salvo: previousSaved } : currentPet,
+      );
+      const message = error.response?.data?.message || 'Erro ao atualizar salvos.';
+      toast.error(message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -113,6 +217,42 @@ const PetDetails: React.FC = () => {
 
   const isMyPet = user?.id === pet.fk_usuario_id;
   const status = getPetStatus(pet);
+  const isLiked = Boolean(
+    selectedUserPet && pet.curtido_por_pet_ids?.includes(selectedUserPet.id),
+  );
+  const selectedPetCompatibility = (() => {
+    if (!selectedUserPet) {
+      return {
+        canLike: false,
+        message: 'Cadastre um pet para curtir perfis compatíveis.',
+      };
+    }
+
+    if (selectedUserPet.especie !== pet.especie) {
+      return {
+        canLike: false,
+        message: 'Selecione um pet da mesma espécie para tentar um match.',
+      };
+    }
+
+    if (selectedUserPet.genero === pet.genero) {
+      return {
+        canLike: false,
+        message: 'Para reprodução, os pets precisam ter gêneros opostos.',
+      };
+    }
+
+    return {
+      canLike: true,
+      message: '',
+    };
+  })();
+  const likeButtonDisabled =
+    isMyPet ||
+    userPets.length === 0 ||
+    isLiked ||
+    liking ||
+    !selectedPetCompatibility.canLike;
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -168,13 +308,17 @@ const PetDetails: React.FC = () => {
           )}
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Button onClick={() => handleSwipe('like')} disabled={isMyPet || userPets.length === 0}>
-              <Heart className="h-4 w-4" />
-              Curtir
+            <Button onClick={() => handleSwipe('like')} disabled={likeButtonDisabled}>
+              <Heart className={`h-4 w-4 ${isLiked ? 'fill-white' : ''}`} />
+              {isLiked ? 'Curtido' : liking ? 'Curtindo' : 'Curtir'}
             </Button>
-            <Button variant="outline" onClick={() => toast.success('Pet salvo nos favoritos.')}>
-              <Star className="h-4 w-4" />
-              Favoritar
+            <Button
+              variant={isSaved ? 'default' : 'outline'}
+              onClick={handleToggleSave}
+              disabled={saving || isMyPet}
+            >
+              <Star className={`h-4 w-4 ${isSaved ? 'fill-white' : ''}`} />
+              {isSaved ? 'Salvo' : saving ? 'Salvando' : 'Salvar'}
             </Button>
             <Button variant="outline" onClick={() => toast('Faça match para liberar o chat.')}>
               <MessageCircle className="h-4 w-4" />
@@ -203,6 +347,10 @@ const PetDetails: React.FC = () => {
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-pink-200 bg-pink-50 text-pink-700">
+                <Heart className="h-3 w-3" />
+                {pet.curtidas_count || 0} {(pet.curtidas_count || 0) === 1 ? 'curtida' : 'curtidas'}
+              </Badge>
               {pet.pedigree && (
                 <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
                   <Trophy className="h-3 w-3" />
@@ -365,10 +513,20 @@ const PetDetails: React.FC = () => {
                       {userPets.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.nome}
+                          {p.especie !== pet.especie
+                            ? ' - espécie diferente'
+                            : p.genero === pet.genero
+                              ? ' - mesmo gênero'
+                              : ''}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
+                {!selectedPetCompatibility.canLike && (
+                  <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    {selectedPetCompatibility.message}
+                  </p>
                 )}
                 <div className="flex gap-4">
                   <Button
@@ -384,9 +542,10 @@ const PetDetails: React.FC = () => {
                     size="lg"
                     className="flex-1 bg-pink-500 hover:bg-pink-600"
                     onClick={() => handleSwipe('like')}
+                    disabled={likeButtonDisabled}
                   >
-                    <Heart className="h-5 w-5 mr-2" />
-                    Curtir
+                    <Heart className={`h-5 w-5 mr-2 ${isLiked ? 'fill-white' : ''}`} />
+                    {isLiked ? 'Curtido' : liking ? 'Curtindo' : 'Curtir'}
                   </Button>
                 </div>
               </CardContent>

@@ -26,6 +26,7 @@ interface Message {
 
 interface Conversation {
   id: string;
+  fk_match_id?: string;
   criado_em: string;
   fk_participante_1_id: string;
   fk_participante_2_id: string;
@@ -73,6 +74,7 @@ const Chat: React.FC = () => {
   const selectedConversationRef = useRef<Conversation | null>(null);
   const [searchParams] = useSearchParams();
   const matchId = searchParams.get('match');
+  const conversationId = searchParams.get('conversation');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,18 +135,20 @@ const Chat: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!matchId || selectedConversation || conversations.length === 0) {
+    if ((!matchId && !conversationId) || selectedConversation || conversations.length === 0) {
       return;
     }
 
-    const conversationFromMatch = conversations.find((conversation) => (
-      conversation.fk_match_id === matchId || conversation.match?.id === matchId
+    const conversationFromLink = conversations.find((conversation) => (
+      conversation.id === conversationId ||
+      conversation.fk_match_id === matchId ||
+      conversation.match?.id === matchId
     ));
 
-    if (conversationFromMatch) {
-      setSelectedConversation(conversationFromMatch);
+    if (conversationFromLink) {
+      setSelectedConversation(conversationFromLink);
     }
-  }, [conversations, matchId, selectedConversation]);
+  }, [conversationId, conversations, matchId, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation && socket) {

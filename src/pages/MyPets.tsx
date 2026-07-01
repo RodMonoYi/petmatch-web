@@ -296,7 +296,7 @@ const MyPets: React.FC = () => {
                   </div>
                   <div>
                     <Heart className="mx-auto mb-1 h-4 w-4 text-pink-500" />
-                    <span className="font-semibold text-gray-900">{stats.likes}</span>
+                    <span className="font-semibold text-gray-900">{pet.curtidas_count || 0}</span>
                     <p>curtidas</p>
                   </div>
                   <div>

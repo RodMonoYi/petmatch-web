@@ -27,6 +27,10 @@ export interface Pet {
   fk_usuario_id: string;
   usuario?: User;
   distancia_km?: number; // Distância em km (adicionado no getPotentialMatches)
+  curtidas_count?: number;
+  curtido?: boolean;
+  curtido_por_pet_ids?: string[];
+  salvo?: boolean;
   criado_em: string;
   atualizado_em: string;
 }
@@ -62,6 +66,28 @@ export interface Message {
   fk_conversa_id: string;
   fk_remetente_id: string;
   remetente?: User;
+}
+
+export type NotificationType = 'like' | 'match' | 'message';
+
+export interface NotificationItem {
+  id: string;
+  tipo: NotificationType;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
+  dados?: {
+    matchId?: string;
+    conversationId?: string;
+    messageId?: string;
+    senderId?: string;
+    sourcePetId?: string;
+    targetPetId?: string;
+    petId?: string;
+  } | null;
+  criado_em: string;
+  lida_em?: string | null;
+  fk_usuario_id: string;
 }
 
 export interface AuthResponse {

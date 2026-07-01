@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message } from '../types';
+import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message, NotificationItem } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -66,6 +66,9 @@ export const petsAPI = {
   
   getMyPets: (): Promise<Pet[]> =>
     api.get('/pets/my-pets').then(res => res.data),
+
+  getSaved: (): Promise<Pet[]> =>
+    api.get('/pets/saved').then(res => res.data),
   
   getById: (id: string): Promise<Pet> =>
     api.get(`/pets/${id}`).then(res => res.data),
@@ -75,6 +78,12 @@ export const petsAPI = {
   
   delete: (id: string): Promise<void> =>
     api.delete(`/pets/${id}`).then(res => res.data),
+
+  save: (id: string): Promise<{ petId: string; salvo: boolean }> =>
+    api.post(`/pets/${id}/save`).then(res => res.data),
+
+  unsave: (id: string): Promise<{ petId: string; salvo: boolean }> =>
+    api.delete(`/pets/${id}/save`).then(res => res.data),
 };
 
 // Matches API
@@ -105,6 +114,21 @@ export const chatAPI = {
   
   getMessages: (conversationId: string): Promise<Message[]> =>
     api.get(`/chat/conversations/${conversationId}/messages`).then(res => res.data),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: (params?: { limit?: number; unreadOnly?: boolean }): Promise<NotificationItem[]> =>
+    api.get('/notifications', { params }).then(res => res.data),
+
+  getUnreadCount: (): Promise<number> =>
+    api.get('/notifications/unread-count').then(res => Number(res.data)),
+
+  markAsRead: (id: string): Promise<NotificationItem> =>
+    api.patch(`/notifications/${id}/read`).then(res => res.data),
+
+  markAllAsRead: (): Promise<{ unreadCount: number }> =>
+    api.patch('/notifications/read-all').then(res => res.data),
 };
 
 export default api;
