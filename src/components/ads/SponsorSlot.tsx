@@ -12,9 +12,9 @@ interface SponsorSlotProps {
 const SponsorSlot: React.FC<SponsorSlotProps> = ({ variant = 'banner', className = '' }) => {
   if (variant === 'compact') {
     return (
-      <aside className={`rounded-lg border border-emerald-100 bg-emerald-50/80 p-4 ${className}`}>
+      <aside className={`rounded-lg border border-emerald-100 bg-white/85 p-4 shadow-sm ${className}`}>
         <div className="flex items-start gap-3">
-          <div className="rounded-md bg-white p-2 text-emerald-600">
+          <div className="rounded-md bg-emerald-50 p-2 text-emerald-700">
             <Stethoscope className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -38,7 +38,7 @@ const SponsorSlot: React.FC<SponsorSlotProps> = ({ variant = 'banner', className
     <section className={`rounded-lg border border-emerald-100 bg-white px-4 py-4 shadow-sm ${className}`}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-start gap-3">
-          <div className="rounded-md bg-emerald-50 p-2 text-emerald-600">
+          <div className="rounded-md bg-emerald-50 p-2 text-emerald-700">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>

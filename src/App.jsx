@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import Search from './pages/Search';
 import PetDetails from './pages/PetDetails';
 import SavedPets from './pages/SavedPets';
+import Profile from './pages/Profile';
 import './App.css';
 
 const PublicOnlyRoute = ({ children }) => {
@@ -46,7 +47,7 @@ function App() {
                 path="/"
                 element={
                   <PublicOnlyRoute>
-                    <Login />
+                    <Home />
                   </PublicOnlyRoute>
                 }
               />
@@ -130,9 +131,15 @@ function App() {
                 path="/profile"
                 element={
                   <ProtectedRoute>
-                    <div className="min-h-screen flex items-center justify-center">
-                      <h1 className="text-2xl font-bold">Página Perfil - Em desenvolvimento</h1>
-                    </div>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/location"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />
@@ -140,7 +147,7 @@ function App() {
                 path="/settings"
                 element={
                   <ProtectedRoute>
-                    <Settings />
+                    <Navigate to="/profile/location" replace />
                   </ProtectedRoute>
                 }
               />

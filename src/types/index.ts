@@ -3,6 +3,7 @@ export interface User {
   nome: string;
   email: string;
   telefone?: string;
+  foto_perfil_url?: string | null;
   localizacao_geo?: string; // JSON: { latitude: number, longitude: number }
   raio_maximo?: number; // Alcance máximo em km (5, 10, 20, 50, 100)
   criado_em: string;

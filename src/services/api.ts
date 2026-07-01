@@ -2,6 +2,7 @@ import axios from 'axios';
 import { AuthResponse, LoginData, RegisterData, User, Pet, CreatePetData, SearchPetsParams, PetsResponse, Match, Conversation, Message, NotificationItem } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -51,9 +52,31 @@ export const usersAPI = {
   
   updateMe: (data: Partial<User>): Promise<User> =>
     api.patch('/users/me', data).then(res => res.data),
+
+  uploadProfilePhoto: (file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    return api.post('/users/me/profile-photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  },
+
+  removeProfilePhoto: (): Promise<User> =>
+    api.delete('/users/me/profile-photo').then(res => res.data),
   
   deleteMe: (): Promise<void> =>
     api.delete('/users/me').then(res => res.data),
+};
+
+export const getApiAssetUrl = (url?: string | null) => {
+  if (!url) return '';
+  if (/^https?:\/\//.test(url) || url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  return `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 // Pets API

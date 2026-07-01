@@ -98,15 +98,15 @@ const Matches: React.FC = () => {
     switch (especie.toLowerCase()) {
       case 'cão':
       case 'cachorro':
-        return <Dog className="h-5 w-5 text-pink-500" />;
+        return <Dog className="h-5 w-5 text-rose-600" />;
       case 'gato':
-        return <Cat className="h-5 w-5 text-pink-500" />;
+        return <Cat className="h-5 w-5 text-rose-600" />;
       case 'passaro':
-        return <Bird className="h-5 w-5 text-pink-500" />;
+        return <Bird className="h-5 w-5 text-rose-600" />;
       case 'coelho':
-        return <Rabbit className="h-5 w-5 text-pink-500" />;
+        return <Rabbit className="h-5 w-5 text-rose-600" />;
       default:
-        return <PawPrint className="h-5 w-5 text-pink-500" />;
+        return <PawPrint className="h-5 w-5 text-rose-600" />;
     }
   };
 
@@ -147,19 +147,28 @@ const Matches: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
+          <p className="mt-4 text-sm text-gray-600">Carregando matches...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Meus Matches</h1>
-        <div className="flex items-center gap-2">
-          <Heart className="h-6 w-6 text-pink-500" />
-          <span className="text-lg font-semibold text-pink-500">
+    <div className="page-shell">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="page-kicker">Conexões</p>
+          <h1 className="page-title mt-2">Meus matches</h1>
+          <p className="mt-2 text-gray-600">
+            Quando os dois tutores demonstram interesse, a conversa pode começar.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
+          <Heart className="h-5 w-5 text-rose-600" />
+          <span className="text-sm font-semibold text-rose-700">
             {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
           </span>
         </div>
@@ -169,7 +178,7 @@ const Matches: React.FC = () => {
 
       {/* Pet Filter */}
       {userPets.length > 1 && (
-        <div className="mb-6">
+        <div className="soft-panel mb-6 max-w-xs p-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Filtrar por pet:
           </label>
@@ -179,7 +188,7 @@ const Matches: React.FC = () => {
               const pet = userPets.find(p => p.id === e.target.value);
               setSelectedUserPet(pet || null);
             }}
-            className="w-full max-w-xs p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+            className="w-full rounded-md border border-stone-300 bg-white p-2 text-sm focus:border-rose-500 focus:ring-rose-500"
           >
             <option value="">Todos os pets</option>
             {userPets.map((pet) => (
@@ -192,22 +201,22 @@ const Matches: React.FC = () => {
       )}
 
       {filteredMatches.length === 0 ? (
-        <div className="mx-auto max-w-2xl py-16 text-center">
-          <div className="mx-auto mb-6 flex h-40 w-40 items-center justify-center rounded-full bg-pink-50">
+        <div className="empty-state mx-auto max-w-2xl">
+          <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-rose-50">
             <div className="relative">
-              <PawPrint className="h-20 w-20 -rotate-12 text-pink-300" />
-              <Heart className="absolute -right-6 -top-4 h-12 w-12 fill-pink-500 text-pink-500" />
+              <PawPrint className="h-14 w-14 -rotate-12 text-rose-300" />
+              <Heart className="absolute -right-5 -top-4 h-9 w-9 fill-rose-600 text-rose-600" />
               <Sparkles className="absolute -bottom-3 -right-2 h-8 w-8 text-amber-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-600 mb-4">
+          <h2 className="text-2xl font-semibold text-gray-950 mb-4">
             {selectedUserPet ? `${selectedUserPet.nome} ainda não tem matches` : 'Você ainda não tem matches'}
           </h2>
           <p className="text-gray-500 mb-6">
             Você já curtiu {stats.likes} {stats.likes === 1 ? 'pet' : 'pets'}. Continue descobrindo para encontrar combinações compatíveis.
           </p>
           <Button onClick={() => window.location.href = '/discover'}>
-            Descobrir Pets
+            Descobrir pets
           </Button>
         </div>
       ) : (
@@ -219,65 +228,59 @@ const Matches: React.FC = () => {
             if (!otherPet || !myPet) return null;
 
             return (
-              <Card key={match.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                {/* Match Header */}
-                <CardHeader className="bg-gradient-to-r from-pink-500 to-red-500 text-white p-4">
+              <Card key={match.id} className="pet-card group py-0">
+                <CardHeader className="border-b border-rose-100 bg-rose-50 p-4 text-rose-800">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Heart className="h-5 w-5" />
-                      <span className="font-semibold">É um Match!</span>
+                      <Heart className="h-5 w-5 fill-rose-600 text-rose-600" />
+                      <span className="font-semibold">É um match</span>
                     </div>
-                    <span className="text-sm opacity-90">
+                    <span className="text-sm text-rose-700">
                       {formatMatchDate(match.criado_em)}
                     </span>
                   </div>
                 </CardHeader>
 
-                {/* Pet Images */}
                 <div className="relative">
                   <div className="flex">
-                    {/* My Pet */}
                     <div className="w-1/2 relative">
                       {myPet.fotos && myPet.fotos.length > 0 && (
                         <img
                           src={myPet.fotos[0]}
                           alt={myPet.nome}
-                          className="w-full h-32 object-cover"
+                          className="h-32 w-full object-cover"
                         />
                       )}
-                      <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                      <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
                         {myPet.nome}
                       </div>
                     </div>
                     
-                    {/* Heart Divider */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                      <div className="bg-pink-500 rounded-full p-2">
+                      <div className="rounded-full bg-rose-600 p-2">
                         <Heart className="h-4 w-4 text-white fill-current" />
                       </div>
                     </div>
 
-                    {/* Other Pet */}
                     <div className="w-1/2 relative">
                       {otherPet.fotos && otherPet.fotos.length > 0 && (
                         <img
                           src={otherPet.fotos[0]}
                           alt={otherPet.nome}
-                          className="w-full h-32 object-cover"
+                          className="h-32 w-full object-cover"
                         />
                       )}
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                      <div className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
                         {otherPet.nome}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Pet Info */}
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     {getSpeciesIcon(otherPet.especie)}
-                    <h3 className="text-lg font-bold">{otherPet.nome}</h3>
+                    <h3 className="text-lg font-semibold text-gray-950">{otherPet.nome}</h3>
                     <span className="text-sm text-gray-600">
                       {calculateAge(otherPet.data_nascimento)}
                     </span>
@@ -302,10 +305,10 @@ const Matches: React.FC = () => {
 
                   <Button 
                     onClick={() => handleStartChat(match)}
-                    className="w-full bg-pink-500 hover:bg-pink-600"
+                    className="w-full bg-rose-600 hover:bg-rose-700"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Iniciar Conversa
+                    Iniciar conversa
                   </Button>
                 </CardContent>
               </Card>

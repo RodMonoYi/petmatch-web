@@ -142,7 +142,7 @@ const Search: React.FC = () => {
       const response: PetsResponse = await petsAPI.getAll(params);
       
       // Filtrar por termo de busca no frontend (nome, raça, descrição)
-      let filteredPets = response.pets;
+      let filteredPets = response.pets.filter((pet) => pet.fk_usuario_id !== user?.id);
       if (filters.searchTerm) {
         const term = filters.searchTerm.toLowerCase();
         filteredPets = response.pets.filter(pet => 
@@ -234,11 +234,11 @@ const Search: React.FC = () => {
     switch (especie.toLowerCase()) {
       case 'cão':
       case 'cachorro':
-        return <Dog className="h-5 w-5 text-pink-500" />;
+        return <Dog className="h-5 w-5 text-rose-600" />;
       case 'gato':
-        return <Cat className="h-5 w-5 text-pink-500" />;
+        return <Cat className="h-5 w-5 text-rose-600" />;
       default:
-        return <Heart className="h-5 w-5 text-pink-500" />;
+        return <Heart className="h-5 w-5 text-rose-600" />;
     }
   };
 
@@ -436,52 +436,57 @@ const Search: React.FC = () => {
     }
   };
 
-  // Tela inicial - seleção de espécie
   if (!hasSelectedSpecies) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Marketplace de Pets</h1>
-          <p className="text-xl text-gray-600">Encontre pets para reprodução por raça, espécie e muito mais</p>
+          <p className="page-kicker">Busca</p>
+          <h1 className="page-title mt-3">Que tipo de pet você quer encontrar?</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-gray-600">
+            Comece pela espécie. Depois você pode filtrar por raça, gênero,
+            distância, saúde e disponibilidade.
+          </p>
         </div>
 
         <SponsorSlot className="mb-6" />
 
-        <Card className="p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Qual espécie você deseja buscar?</h2>
-            <p className="text-gray-600 mb-8">Selecione uma espécie para começar a busca</p>
+        <Card className="soft-panel p-5 sm:p-8">
+          <div className="mb-6 text-center sm:mb-8">
+            <h2 className="text-2xl font-semibold text-gray-950">Escolha a espécie</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600 sm:text-base">
+              Isso evita resultados soltos demais logo no início.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <div className="mx-auto grid max-w-2xl grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             <Button
               variant="outline"
               size="lg"
-              className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-pink-50 hover:border-pink-300 transition-colors"
+              className="h-24 w-full min-w-0 flex-col gap-2 border-stone-200 bg-white px-2 hover:border-rose-200 hover:bg-rose-50 sm:h-28 sm:gap-3"
               onClick={() => handleSpeciesSelection('Cão')}
             >
-              <Dog className="h-12 w-12 text-pink-500" />
-              <span className="text-lg font-semibold">Cães</span>
+              <Dog className="h-7 w-7 text-rose-600 sm:h-9 sm:w-9" />
+              <span className="text-sm font-semibold sm:text-lg">Cães</span>
             </Button>
 
             <Button
               variant="outline"
               size="lg"
-              className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-pink-50 hover:border-pink-300 transition-colors"
+              className="h-24 w-full min-w-0 flex-col gap-2 border-stone-200 bg-white px-2 hover:border-rose-200 hover:bg-rose-50 sm:h-28 sm:gap-3"
               onClick={() => handleSpeciesSelection('Gato')}
             >
-              <Cat className="h-12 w-12 text-pink-500" />
-              <span className="text-lg font-semibold">Gatos</span>
+              <Cat className="h-7 w-7 text-rose-600 sm:h-9 sm:w-9" />
+              <span className="text-sm font-semibold sm:text-lg">Gatos</span>
             </Button>
 
             <Button
               variant="outline"
               size="lg"
-              className="h-32 flex flex-col items-center justify-center gap-3 hover:bg-pink-50 hover:border-pink-300 transition-colors"
+              className="h-24 w-full min-w-0 flex-col gap-2 border-stone-200 bg-white px-2 hover:border-rose-200 hover:bg-rose-50 sm:h-28 sm:gap-3"
               onClick={() => handleSpeciesSelection('all')}
             >
-              <Heart className="h-12 w-12 text-pink-500" />
-              <span className="text-lg font-semibold">Todas</span>
+              <Heart className="h-7 w-7 text-rose-600 sm:h-9 sm:w-9" />
+              <span className="text-sm font-semibold sm:text-lg">Todas</span>
             </Button>
           </div>
         </Card>
@@ -491,12 +496,13 @@ const Search: React.FC = () => {
 
   // Tela de busca com resultados
   return (
-    <div className="container mx-auto p-4 max-w-7xl">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="page-shell">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Marketplace de Pets</h1>
-          <p className="text-gray-600">
-            Buscando: <span className="font-semibold">
+          <p className="page-kicker">Busca</p>
+          <h1 className="page-title mt-2">Perfis encontrados</h1>
+          <p className="mt-2 text-gray-600">
+            Especie: <span className="font-semibold text-gray-900">
               {filters.especie === 'all' ? 'Todas as espécies' : filters.especie + 's'}
             </span>
           </p>
@@ -508,8 +514,7 @@ const Search: React.FC = () => {
       </div>
 
       {/* Barra de busca e filtros */}
-      <div className="mb-6 space-y-4">
-        {/* Busca por texto */}
+      <div className="soft-panel mb-6 space-y-4 p-4">
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -520,7 +525,6 @@ const Search: React.FC = () => {
           />
         </div>
 
-        {/* Botão de filtros */}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -533,14 +537,13 @@ const Search: React.FC = () => {
           </Button>
           {hasActiveFilters && (
             <Button variant="ghost" onClick={clearFilters} size="sm">
-              Limpar Filtros
+              Limpar filtros
             </Button>
           )}
         </div>
 
-        {/* Painel de filtros */}
         {showFilters && (
-          <Card className="p-4">
+          <Card className="border-stone-200 bg-stone-50/70 p-4 shadow-none">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="genero">Gênero</Label>
@@ -709,12 +712,12 @@ const Search: React.FC = () => {
       {/* Resultados */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
         </div>
       ) : pets.length === 0 ? (
-        <div className="text-center py-20">
+        <div className="empty-state">
           <SearchIcon className="h-24 w-24 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Nenhum pet encontrado</h2>
+          <h2 className="text-2xl font-semibold text-gray-950 mb-4">Nenhum pet encontrado</h2>
           <p className="text-gray-600 mb-6">
             Tente ajustar os filtros ou buscar por outros termos.
           </p>
@@ -744,20 +747,20 @@ const Search: React.FC = () => {
               const likeBlocked = !likeAvailability.canLike;
 
               return (
-              <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={pet.id} className="pet-card group py-0">
                 <div className="relative h-48 bg-gray-100">
                   {pet.fotos && pet.fotos.length > 0 ? (
                     <img
                       src={pet.fotos[0]}
                       alt={pet.nome}
-                      className="h-full w-full object-cover"
+                      className="pet-photo"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <Heart className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
-                  <div className="absolute right-2 top-2 rounded-full bg-white p-2 shadow-sm">
+                  <div className="absolute right-2 top-2 rounded-md bg-white/95 p-2 shadow-sm">
                     {getSpeciesIcon(pet.especie)}
                   </div>
                   <Badge variant="outline" className={`absolute left-2 top-2 border ${status.className}`}>
@@ -768,7 +771,7 @@ const Search: React.FC = () => {
                 <CardContent className="space-y-4 p-4">
                   <div>
                     <div className="mb-1 flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-lg leading-tight">{pet.nome}</h3>
+                      <h3 className="text-lg font-semibold leading-tight text-gray-950">{pet.nome}</h3>
                       <span className="text-xs font-medium text-gray-500">{calculatePetAge(pet.data_nascimento)}</span>
                     </div>
                     <div className="space-y-1 text-sm text-gray-600">
@@ -783,7 +786,7 @@ const Search: React.FC = () => {
                       </p>
                       <p>{pet.genero} • {pet.porte}</p>
                       <p className="flex items-center gap-1 text-gray-500">
-                        <Heart className="h-4 w-4 text-pink-500" />
+                        <Heart className="h-4 w-4 text-rose-600" />
                         {pet.curtidas_count || 0} {(pet.curtidas_count || 0) === 1 ? 'curtida' : 'curtidas'}
                       </p>
                     </div>
@@ -834,7 +837,7 @@ const Search: React.FC = () => {
                       onClick={() => handleQuickLike(pet)}
                       disabled={likeBlocked || isLiking}
                     >
-                      <Heart className={`h-4 w-4 ${isFullyLiked ? 'fill-white' : 'text-pink-500'}`} />
+                      <Heart className={`h-4 w-4 ${isFullyLiked ? 'fill-white' : 'text-rose-600'}`} />
                       {isFullyLiked ? 'Curtido' : isLiking ? 'Curtindo' : likeAvailability.label}
                     </Button>
                     <Button

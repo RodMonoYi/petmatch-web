@@ -1,18 +1,21 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Bell,
+  Bookmark,
   CheckCheck,
   ChevronDown,
-  Heart,
+  Compass,
   HeartHandshake,
+  Info,
   LogOut,
   Menu,
   MessageCircle,
   PawPrint,
-  Settings,
+  Search as SearchIcon,
+  UserRound,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { NotificationItem } from '../../types';
+import { getApiAssetUrl } from '../../services/api';
 
 const getNotificationPath = (notification: NotificationItem) => {
   if (notification.tipo === 'message' && notification.dados?.conversationId) {
@@ -80,19 +84,26 @@ const Header: React.FC = () => {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } =
     useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
   const userInitial = user?.nome?.charAt(0).toUpperCase() || 'U';
+  const userPhotoUrl = getApiAssetUrl(user?.foto_perfil_url);
   const authenticatedNavItems = [
-    { to: '/discover', label: 'Descobrir' },
-    { to: '/search', label: 'Buscar' },
-    { to: '/matches', label: 'Matches' },
-    { to: '/saved', label: 'Salvos' },
-    { to: '/chat', label: 'Chat' },
-    { to: '/my-pets', label: 'Meus Pets' },
+    { to: '/discover', label: 'Descobrir', icon: Compass },
+    { to: '/search', label: 'Buscar', icon: SearchIcon },
+    { to: '/matches', label: 'Matches', icon: HeartHandshake },
+    { to: '/saved', label: 'Salvos', icon: Bookmark },
+    { to: '/chat', label: 'Chat', icon: MessageCircle },
+    { to: '/my-pets', label: 'Meus pets', icon: PawPrint },
+    { to: '/profile', label: 'Meu perfil', icon: UserRound },
   ];
   const publicNavItems = [
-    { to: '/sobre', label: 'Sobre' },
-    { to: '/sobre', label: 'Como Funciona' },
+    { to: '/', label: 'Sobre', icon: Info },
+    { to: '/#como-funciona', label: 'Como funciona', icon: Compass },
   ];
+  const isActiveRoute = (path: string) => {
+    const pathname = path.split('#')[0];
+    return location.pathname === pathname;
+  };
 
   const handleLogout = () => {
     logout();
@@ -100,47 +111,62 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/90 shadow-sm backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex min-w-0 items-center space-x-2">
-            <Heart className="h-8 w-8 text-pink-500" />
-            <span className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
+          <Link to={isAuthenticated ? '/discover' : '/'} className="flex min-w-0 items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+              <PawPrint className="h-5 w-5" />
+            </span>
+            <span className="truncate text-xl font-semibold text-gray-950 sm:text-2xl">
               PetMatch
             </span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden items-center gap-1 xl:flex">
             {isAuthenticated ? (
               <>
-                {authenticatedNavItems.map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className="text-gray-700 transition-colors hover:text-pink-500"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {authenticatedNavItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-rose-50 hover:text-rose-700',
+                        isActiveRoute(item.to) && 'bg-rose-50 text-rose-700',
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </>
             ) : (
               <>
-                {publicNavItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    to={item.to}
-                    className="text-gray-700 transition-colors hover:text-pink-500"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {publicNavItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.to}
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-rose-50 hover:text-rose-700',
+                        isActiveRoute(item.to) && 'bg-rose-50 text-rose-700',
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </>
             )}
           </nav>
 
-          {/* User Menu */}
           <div className="flex items-center gap-2 sm:gap-3">
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-3">
@@ -148,12 +174,12 @@ const Header: React.FC = () => {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="relative rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500"
+                      className="relative rounded-md p-2 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700"
                       aria-label="Notificações"
                     >
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs font-semibold text-white">
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-xs font-semibold text-white">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
@@ -211,14 +237,14 @@ const Header: React.FC = () => {
                                 onClick={() => markAsRead(notification.id)}
                                 className={cn(
                                   'flex gap-3 px-4 py-3 transition-colors hover:bg-gray-50',
-                                  !notification.lida && 'bg-pink-50/60',
+                                  !notification.lida && 'bg-rose-50/60',
                                 )}
                               >
                                 <span
                                   className={cn(
                                     'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
                                     notification.tipo === 'match'
-                                      ? 'bg-pink-100 text-pink-600'
+                                      ? 'bg-rose-100 text-rose-700'
                                       : notification.tipo === 'message'
                                         ? 'bg-blue-100 text-blue-600'
                                         : 'bg-amber-100 text-amber-700',
@@ -232,7 +258,7 @@ const Header: React.FC = () => {
                                       {notification.titulo}
                                     </span>
                                     {!notification.lida && (
-                                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-pink-500" />
+                                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-600" />
                                     )}
                                   </span>
                                   <span className="mt-0.5 line-clamp-2 text-sm leading-5 text-gray-600">
@@ -251,18 +277,19 @@ const Header: React.FC = () => {
                   </PopoverContent>
                 </Popover>
                 <Link
-                  to="/settings"
-                  className="hidden text-gray-700 transition-colors hover:text-pink-500 md:block"
-                  title="Configurações"
+                  to="/profile"
+                  className="hidden text-gray-700 transition-colors hover:text-rose-700 md:block"
+                  title="Meu perfil"
                 >
-                  <Settings className="h-5 w-5" />
+                  <UserRound className="h-5 w-5" />
                 </Link>
                 <Link
-                  to="/settings"
-                  className="hidden items-center gap-2 rounded-md px-2 py-1.5 text-gray-700 transition-colors hover:bg-gray-50 hover:text-pink-500 lg:flex"
+                  to="/profile"
+                  className="hidden items-center gap-2 rounded-md px-2 py-1.5 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700 lg:flex"
                 >
                   <Avatar className="size-8">
-                    <AvatarFallback className="bg-pink-100 text-sm font-semibold text-pink-700">
+                    {userPhotoUrl && <AvatarImage src={userPhotoUrl} alt={user?.nome || 'Perfil'} />}
+                    <AvatarFallback className="bg-rose-100 text-sm font-semibold text-rose-700">
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>
@@ -277,7 +304,7 @@ const Header: React.FC = () => {
                   <SheetTrigger asChild>
                     <button
                       type="button"
-                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500 md:hidden"
+                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700 xl:hidden"
                       aria-label="Abrir menu"
                     >
                       <Menu className="h-5 w-5" />
@@ -285,29 +312,37 @@ const Header: React.FC = () => {
                   </SheetTrigger>
                   <SheetContent className="w-80 max-w-[85vw]">
                     <SheetHeader>
-                      <SheetTitle>PetMatch</SheetTitle>
+                      <SheetTitle>Menu</SheetTitle>
                       <SheetDescription>
-                        Navegação principal
+                        Acesse as áreas do PetMatch.
                       </SheetDescription>
                     </SheetHeader>
                     <nav className="flex flex-col gap-1 px-4">
-                      {authenticatedNavItems.map((item) => (
-                        <SheetClose key={item.to} asChild>
-                          <Link
-                            to={item.to}
-                            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-600"
-                          >
-                            {item.label}
-                          </Link>
-                        </SheetClose>
-                      ))}
+                      {authenticatedNavItems.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <SheetClose key={item.to} asChild>
+                            <Link
+                              to={item.to}
+                              className={cn(
+                                'flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700',
+                                isActiveRoute(item.to) && 'bg-rose-50 text-rose-700',
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {item.label}
+                            </Link>
+                          </SheetClose>
+                        );
+                      })}
                     </nav>
                     <SheetFooter>
                       <SheetClose asChild>
                         <Button variant="outline" asChild>
-                          <Link to="/settings">
-                            <Settings className="h-4 w-4" />
-                            Configurações
+                          <Link to="/profile">
+                            <UserRound className="h-4 w-4" />
+                            Meu perfil
                           </Link>
                         </Button>
                       </SheetClose>
@@ -333,7 +368,7 @@ const Header: React.FC = () => {
                   <SheetTrigger asChild>
                     <button
                       type="button"
-                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500 md:hidden"
+                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700 xl:hidden"
                       aria-label="Abrir menu"
                     >
                       <Menu className="h-5 w-5" />
@@ -343,20 +378,28 @@ const Header: React.FC = () => {
                     <SheetHeader>
                       <SheetTitle>PetMatch</SheetTitle>
                       <SheetDescription>
-                        Navegação principal
+                        Encontre perfis e cuide das conversas em um só lugar.
                       </SheetDescription>
                     </SheetHeader>
                     <nav className="flex flex-col gap-1 px-4">
-                      {publicNavItems.map((item) => (
-                        <SheetClose key={item.label} asChild>
-                          <Link
-                            to={item.to}
-                            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-600"
-                          >
-                            {item.label}
-                          </Link>
-                        </SheetClose>
-                      ))}
+                      {publicNavItems.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <SheetClose key={item.label} asChild>
+                            <Link
+                              to={item.to}
+                              className={cn(
+                                'flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-rose-50 hover:text-rose-700',
+                                isActiveRoute(item.to) && 'bg-rose-50 text-rose-700',
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {item.label}
+                            </Link>
+                          </SheetClose>
+                        );
+                      })}
                     </nav>
                     <SheetFooter>
                       <SheetClose asChild>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usersAPI } from '../services/api';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Navigation, Save, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, Save, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Settings: React.FC = () => {
@@ -95,22 +96,29 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Configurações</h1>
-        <p className="text-gray-600 mt-2">Configure sua localização e alcance de busca</p>
+        <p className="page-kicker">Preferências</p>
+        <h1 className="page-title mt-2">Localização</h1>
+        <p className="text-gray-600 mt-2">Configure sua localização e alcance de busca.</p>
+        <Button variant="ghost" asChild className="mt-3 px-0">
+          <Link to="/profile">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para meu perfil
+          </Link>
+        </Button>
       </div>
 
       <div className="space-y-6">
         {/* Localização */}
-        <Card>
+        <Card className="soft-panel">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-pink-500" />
+              <MapPin className="h-5 w-5 text-rose-600" />
               Localização
             </CardTitle>
             <CardDescription>
-              Sua localização ajuda a encontrar pets próximos para matches
+              Sua localização ajuda a encontrar pets próximos para matches.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -165,7 +173,7 @@ const Settings: React.FC = () => {
               variant="outline"
               className="w-full"
             >
-              Definir Localização Manual
+              Definir localização manual
             </Button>
 
             {/* Localização atual */}
@@ -181,9 +189,9 @@ const Settings: React.FC = () => {
         </Card>
 
         {/* Alcance máximo */}
-        <Card>
+        <Card className="soft-panel">
           <CardHeader>
-            <CardTitle>Alcance de Busca</CardTitle>
+            <CardTitle>Alcance de busca</CardTitle>
             <CardDescription>
               Defina o raio máximo em quilômetros para buscar pets
             </CardDescription>
@@ -224,7 +232,7 @@ const Settings: React.FC = () => {
             className="min-w-32"
           >
             <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Salvando...' : 'Salvar Configurações'}
+            {loading ? 'Salvando...' : 'Salvar configurações'}
           </Button>
         </div>
       </div>
@@ -233,4 +241,3 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
-

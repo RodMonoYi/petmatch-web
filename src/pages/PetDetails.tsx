@@ -200,17 +200,22 @@ const PetDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
+          <p className="mt-4 text-sm text-gray-600">Carregando perfil...</p>
+        </div>
       </div>
     );
   }
 
   if (!pet) {
     return (
-      <div className="container mx-auto p-4 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Pet não encontrado</h2>
-        <Button onClick={() => navigate('/search')}>Voltar para Busca</Button>
+      <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="empty-state">
+          <h2 className="text-2xl font-semibold text-gray-950 mb-4">Pet não encontrado</h2>
+          <Button onClick={() => navigate('/search')}>Voltar para busca</Button>
+        </div>
       </div>
     );
   }
@@ -255,7 +260,7 @@ const PetDetails: React.FC = () => {
     !selectedPetCompatibility.canLike;
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
       <Button
         variant="ghost"
         onClick={() => navigate(-1)}
@@ -265,12 +270,11 @@ const PetDetails: React.FC = () => {
         Voltar
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Galeria de Fotos */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_0.95fr]">
         <div>
           {pet.fotos && pet.fotos.length > 0 ? (
             <div className="space-y-4">
-              <div className="relative h-96 rounded-lg overflow-hidden">
+              <div className="relative h-[28rem] overflow-hidden rounded-lg border border-stone-200 bg-gray-100 shadow-sm">
                 <img
                   src={pet.fotos[0]}
                   alt={pet.nome}
@@ -302,7 +306,7 @@ const PetDetails: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+            <div className="flex h-[28rem] items-center justify-center rounded-lg border border-stone-200 bg-gray-100">
               <Heart className="h-24 w-24 text-gray-400" />
             </div>
           )}
@@ -331,10 +335,10 @@ const PetDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Informações */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">{pet.nome}</h1>
+            <p className="page-kicker">Perfil do pet</p>
+            <h1 className="mt-2 text-4xl font-semibold text-gray-950">{pet.nome}</h1>
             <div className="flex flex-wrap items-center gap-4 text-gray-600">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
@@ -347,7 +351,7 @@ const PetDetails: React.FC = () => {
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Badge variant="outline" className="border-pink-200 bg-pink-50 text-pink-700">
+              <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-700">
                 <Heart className="h-3 w-3" />
                 {pet.curtidas_count || 0} {(pet.curtidas_count || 0) === 1 ? 'curtida' : 'curtidas'}
               </Badge>
@@ -374,7 +378,7 @@ const PetDetails: React.FC = () => {
 
           <SponsorSlot variant="compact" />
 
-          <Card>
+          <Card className="soft-panel">
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -396,7 +400,7 @@ const PetDetails: React.FC = () => {
               </div>
 
               {pet.pedigree && (
-                <div className="flex items-center gap-2 text-pink-600">
+                <div className="flex items-center gap-2 text-rose-700">
                   <Shield className="h-5 w-5" />
                   <span className="font-semibold">Com Pedigree</span>
                 </div>
@@ -436,7 +440,7 @@ const PetDetails: React.FC = () => {
                 <p className="text-sm text-gray-500 mb-3">Linha do tempo</p>
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <Clock className="mt-0.5 h-4 w-4 text-pink-500" />
+                    <Clock className="mt-0.5 h-4 w-4 text-rose-600" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Cadastro do perfil</p>
                       <p className="text-xs text-gray-500">{new Date(pet.criado_em).toLocaleDateString('pt-BR')}</p>
@@ -485,7 +489,7 @@ const PetDetails: React.FC = () => {
               )}
 
               {pet.distancia_km && (
-                <div className="flex items-center gap-2 text-pink-600">
+                <div className="flex items-center gap-2 text-rose-700">
                   <MapPin className="h-5 w-5" />
                   <span>{pet.distancia_km.toFixed(1)} km de distância</span>
                 </div>
@@ -493,14 +497,13 @@ const PetDetails: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Ações */}
           {!isMyPet && userPets.length > 0 && (
-            <Card>
+            <Card className="soft-panel">
               <CardContent className="p-6">
                 {userPets.length > 1 && (
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fazer swipe com:
+                      Curtir usando:
                     </label>
                     <select
                       value={selectedUserPet?.id || ''}
@@ -508,7 +511,7 @@ const PetDetails: React.FC = () => {
                         const pet = userPets.find(p => p.id === e.target.value);
                         setSelectedUserPet(pet || null);
                       }}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+                      className="w-full rounded-md border border-stone-300 bg-white p-2 text-sm focus:border-rose-500 focus:ring-rose-500"
                     >
                       {userPets.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -540,7 +543,7 @@ const PetDetails: React.FC = () => {
                   </Button>
                   <Button
                     size="lg"
-                    className="flex-1 bg-pink-500 hover:bg-pink-600"
+                    className="flex-1 bg-rose-600 hover:bg-rose-700"
                     onClick={() => handleSwipe('like')}
                     disabled={likeButtonDisabled}
                   >
@@ -553,7 +556,7 @@ const PetDetails: React.FC = () => {
           )}
 
           {isMyPet && (
-            <Card>
+            <Card className="soft-panel">
               <CardContent className="p-6 text-center">
                 <p className="text-gray-600">Este é seu próprio pet</p>
                 <Link to="/my-pets">

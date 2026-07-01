@@ -67,7 +67,7 @@ const SavedPets: React.FC = () => {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Star className="mx-auto mb-4 h-12 w-12 text-pink-500" />
+          <Star className="mx-auto mb-4 h-12 w-12 text-rose-600" />
           <p className="text-gray-600">Carregando pets salvos...</p>
         </div>
       </div>
@@ -75,11 +75,12 @@ const SavedPets: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl p-4">
+    <div className="page-shell">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pets salvos</h1>
-          <p className="text-gray-600">
+          <p className="page-kicker">Lista curta</p>
+          <h1 className="page-title mt-2">Pets salvos</h1>
+          <p className="mt-2 text-gray-600">
             {pets.length === 1
               ? '1 perfil salvo para acompanhar depois'
               : `${pets.length} perfis salvos para acompanhar depois`}
@@ -94,7 +95,7 @@ const SavedPets: React.FC = () => {
       </div>
 
       {pets.length === 0 ? (
-        <div className="rounded-md border bg-white px-4 py-16 text-center">
+        <div className="empty-state">
           <Star className="mx-auto mb-4 h-12 w-12 text-gray-300" />
           <h2 className="mb-2 text-xl font-semibold text-gray-900">
             Nenhum pet salvo
@@ -113,20 +114,20 @@ const SavedPets: React.FC = () => {
             const isRemoving = removingPetIds.has(pet.id);
 
             return (
-              <Card key={pet.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+              <Card key={pet.id} className="pet-card group py-0">
                 <div className="relative h-48 bg-gray-100">
                   {pet.fotos && pet.fotos.length > 0 ? (
                     <img
                       src={pet.fotos[0]}
                       alt={pet.nome}
-                      className="h-full w-full object-cover"
+                      className="pet-photo"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <Heart className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
-                  <Badge variant="outline" className={`absolute left-2 top-2 border ${status.className}`}>
+                  <Badge variant="outline" className={`absolute left-2 top-2 border bg-white/90 ${status.className}`}>
                     {status.label}
                   </Badge>
                 </div>
@@ -150,7 +151,7 @@ const SavedPets: React.FC = () => {
                       </p>
                       <p>{pet.genero} • {pet.porte}</p>
                       <p className="flex items-center gap-1 text-gray-500">
-                        <Heart className="h-4 w-4 text-pink-500" />
+                        <Heart className="h-4 w-4 text-rose-600" />
                         {pet.curtidas_count || 0} {(pet.curtidas_count || 0) === 1 ? 'curtida' : 'curtidas'}
                       </p>
                     </div>
@@ -184,7 +185,7 @@ const SavedPets: React.FC = () => {
                       onClick={() => removeSavedPet(pet)}
                       disabled={isRemoving}
                     >
-                      <Star className="h-4 w-4 fill-pink-500 text-pink-500" />
+                      <Star className="h-4 w-4 fill-rose-600 text-rose-600" />
                       {isRemoving ? 'Removendo' : 'Remover'}
                     </Button>
                   </div>

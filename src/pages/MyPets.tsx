@@ -184,42 +184,58 @@ const MyPets: React.FC = () => {
     switch (especie.toLowerCase()) {
       case 'cão':
       case 'cachorro':
-        return <Dog className="h-5 w-5 text-pink-500" />;
+        return <Dog className="h-5 w-5 text-rose-600" />;
       case 'gato':
-        return <Cat className="h-5 w-5 text-pink-500" />;
+        return <Cat className="h-5 w-5 text-rose-600" />;
       case 'passaro':
-        return <Bird className="h-5 w-5 text-pink-500" />;
+        return <Bird className="h-5 w-5 text-rose-600" />;
       case 'coelho':
-        return <Rabbit className="h-5 w-5 text-pink-500" />;
+        return <Rabbit className="h-5 w-5 text-rose-600" />;
       default:
-        return <PawPrint className="h-5 w-5 text-pink-500" />;
+        return <PawPrint className="h-5 w-5 text-rose-600" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
+          <p className="mt-4 text-sm text-gray-600">Carregando seus pets...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Meus Pets</h1>
+    <div className="page-shell">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="page-kicker">Perfil dos pets</p>
+          <h1 className="page-title mt-2">Meus pets</h1>
+          <p className="mt-2 text-gray-600">
+            Atualize fotos, saúde e disponibilidade para melhorar os matches.
+          </p>
+        </div>
         <Button onClick={openCreateModal}>
           <PlusCircle className="mr-2 h-5 w-5" />
-          Adicionar Novo Pet
+          Adicionar pet
         </Button>
       </div>
 
       <SponsorSlot variant="compact" className="mb-6" />
 
       {pets.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-lg text-gray-600">Você ainda não tem pets cadastrados.</p>
-          <p className="text-md text-gray-500">Clique em "Adicionar Novo Pet" para começar!</p>
+        <div className="empty-state">
+          <PawPrint className="mx-auto mb-5 h-14 w-14 text-gray-300" />
+          <h2 className="text-xl font-semibold text-gray-950">Nenhum pet cadastrado</h2>
+          <p className="mx-auto mt-2 max-w-md text-gray-600">
+            Cadastre o primeiro perfil para poder buscar, curtir e receber matches.
+          </p>
+          <Button onClick={openCreateModal} className="mt-6">
+            <PlusCircle className="h-4 w-4" />
+            Adicionar pet
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -227,25 +243,25 @@ const MyPets: React.FC = () => {
             const stats = getPetStats(pet);
             const status = getPetStatus(pet);
             return (
-            <Card key={pet.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card key={pet.id} className="pet-card group py-0">
               <div className="relative h-48 bg-gray-100">
                 {pet.fotos && pet.fotos.length > 0 ? (
                   <img
                     src={pet.fotos[0]}
                     alt={pet.nome}
-                    className="w-full h-full object-cover"
+                    className="pet-photo"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <PawPrint className="h-14 w-14 text-gray-300" />
                   </div>
                 )}
-                <Badge variant="outline" className={`absolute left-3 top-3 border ${status.className}`}>
+                <Badge variant="outline" className={`absolute left-3 top-3 border bg-white/90 ${status.className}`}>
                   {status.label}
                 </Badge>
               </div>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold flex min-w-0 items-center gap-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+                <CardTitle className="flex min-w-0 items-center gap-2 text-xl font-semibold">
                   {getSpeciesIcon(pet.especie)} {pet.nome}
                 </CardTitle>
                 <div className="flex gap-2">
@@ -257,7 +273,7 @@ const MyPets: React.FC = () => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-6 pt-0">
                 <div className="flex flex-wrap gap-2">
                   {pet.pedigree && (
                     <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
@@ -295,7 +311,7 @@ const MyPets: React.FC = () => {
                     <p>visitas</p>
                   </div>
                   <div>
-                    <Heart className="mx-auto mb-1 h-4 w-4 text-pink-500" />
+                    <Heart className="mx-auto mb-1 h-4 w-4 text-rose-600" />
                     <span className="font-semibold text-gray-900">{pet.curtidas_count || 0}</span>
                     <p>curtidas</p>
                   </div>
@@ -309,7 +325,7 @@ const MyPets: React.FC = () => {
                 <Button asChild className="w-full">
                   <Link to={`/pets/${pet.id}`}>
                     <Eye className="h-4 w-4" />
-                    Ver Perfil
+                    Ver perfil
                   </Link>
                 </Button>
               </CardContent>
@@ -320,19 +336,19 @@ const MyPets: React.FC = () => {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[640px]">
           <DialogHeader>
-            <DialogTitle>{currentPet ? 'Editar Pet' : 'Adicionar Novo Pet'}</DialogTitle>
+            <DialogTitle>{currentPet ? 'Editar pet' : 'Adicionar pet'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="nome" className="text-right">Nome</Label>
-              <Input id="nome" name="nome" value={formData.nome} onChange={handleChange} className="col-span-3" required />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="nome" className="sm:text-right">Nome</Label>
+              <Input id="nome" name="nome" value={formData.nome} onChange={handleChange} className="sm:col-span-3" required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="especie" className="text-right">Espécie</Label>
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="especie" className="sm:text-right">Espécie</Label>
               <Select name="especie" value={formData.especie} onValueChange={(value) => handleSelectChange('especie', value)}>
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Selecione a espécie" />
                 </SelectTrigger>
                 <SelectContent>
@@ -344,18 +360,18 @@ const MyPets: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="raca" className="text-right">Raça</Label>
-              <Input id="raca" name="raca" value={formData.raca} onChange={handleChange} className="col-span-3" required />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="raca" className="sm:text-right">Raça</Label>
+              <Input id="raca" name="raca" value={formData.raca} onChange={handleChange} className="sm:col-span-3" required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="data_nascimento" className="text-right">Data de Nascimento</Label>
-              <Input id="data_nascimento" name="data_nascimento" type="date" value={formData.data_nascimento} onChange={handleChange} className="col-span-3" required />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="data_nascimento" className="sm:text-right">Data de nascimento</Label>
+              <Input id="data_nascimento" name="data_nascimento" type="date" value={formData.data_nascimento} onChange={handleChange} className="sm:col-span-3" required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="genero" className="text-right">Gênero</Label>
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="genero" className="sm:text-right">Gênero</Label>
               <Select name="genero" value={formData.genero} onValueChange={(value) => handleSelectChange('genero', value)}>
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Selecione o gênero" />
                 </SelectTrigger>
                 <SelectContent>
@@ -364,10 +380,10 @@ const MyPets: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="porte" className="text-right">Porte</Label>
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="porte" className="sm:text-right">Porte</Label>
               <Select name="porte" value={formData.porte} onValueChange={(value) => handleSelectChange('porte', value)}>
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Selecione o porte" />
                 </SelectTrigger>
                 <SelectContent>
@@ -377,35 +393,35 @@ const MyPets: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="descricao" className="text-right">Descrição</Label>
-              <Textarea id="descricao" name="descricao" value={formData.descricao} onChange={handleChange} className="col-span-3" />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="descricao" className="sm:text-right">Descrição</Label>
+              <Textarea id="descricao" name="descricao" value={formData.descricao} onChange={handleChange} className="sm:col-span-3" />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fotos" className="text-right">Fotos</Label>
-              <Input id="fotos" name="fotos" type="file" multiple onChange={handleFileChange} className="col-span-3" />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="fotos" className="sm:text-right">Fotos</Label>
+              <Input id="fotos" name="fotos" type="file" multiple onChange={handleFileChange} className="sm:col-span-3" />
             </div>
             {formData.fotos && formData.fotos.length > 0 && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="col-span-1"></div>
-                <div className="col-span-3 flex flex-wrap gap-2">
+              <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+                <div className="hidden sm:block"></div>
+                <div className="flex flex-wrap gap-2 sm:col-span-3">
                   {formData.fotos.map((photo, index) => (
                     <img key={index} src={photo} alt="Preview" className="w-24 h-24 object-cover rounded-md" />
                   ))}
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="pedigree" className="text-right">Pedigree</Label>
-              <input id="pedigree" name="pedigree" type="checkbox" checked={formData.pedigree} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="pedigree" className="sm:text-right">Pedigree</Label>
+              <input id="pedigree" name="pedigree" type="checkbox" checked={formData.pedigree} onChange={handleCheckboxChange} className="h-4 w-4 sm:col-span-3" />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="disponivel_reproducao" className="text-right">Disponível</Label>
-              <input id="disponivel_reproducao" name="disponivel_reproducao" type="checkbox" checked={Boolean(formData.disponivel_reproducao)} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="disponivel_reproducao" className="sm:text-right">Disponível</Label>
+              <input id="disponivel_reproducao" name="disponivel_reproducao" type="checkbox" checked={Boolean(formData.disponivel_reproducao)} onChange={handleCheckboxChange} className="h-4 w-4 sm:col-span-3" />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="aceita_viagem" className="text-right">Aceita viagem</Label>
-              <input id="aceita_viagem" name="aceita_viagem" type="checkbox" checked={Boolean(formData.aceita_viagem)} onChange={handleCheckboxChange} className="col-span-3 w-4 h-4" />
+            <div className="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+              <Label htmlFor="aceita_viagem" className="sm:text-right">Aceita viagem</Label>
+              <input id="aceita_viagem" name="aceita_viagem" type="checkbox" checked={Boolean(formData.aceita_viagem)} onChange={handleCheckboxChange} className="h-4 w-4 sm:col-span-3" />
             </div>
           </form>
           <DialogFooter>

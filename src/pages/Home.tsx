@@ -1,175 +1,220 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Shield, Users, Star, ArrowRight, CheckCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle,
+  HeartHandshake,
+  MapPin,
+  MessageCircle,
+  PawPrint,
+  Search,
+  Shield,
+  Star,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import SponsorSlot from '../components/ads/SponsorSlot';
+import heroImage from '../assets/petmatch-hero.webp';
 
 const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
 
   const features = [
     {
-      icon: Heart,
-      title: 'Matches Inteligentes',
-      description: 'Algoritmo avançado que encontra os parceiros perfeitos para seu pet baseado em compatibilidade genética e comportamental.',
+      icon: PawPrint,
+      title: 'Perfis com contexto',
+      description:
+        'Fotos, idade, porte, raça, localização, saúde informada e preferências do tutor no mesmo lugar.',
     },
     {
-      icon: Shield,
-      title: 'Segurança Garantida',
-      description: 'Verificação de perfis por clínicas parceiras e sistema de avaliações para garantir a segurança de todos.',
-    },
-    {
-      icon: Users,
-      title: 'Comunidade Ativa',
-      description: 'Conecte-se com outros tutores responsáveis que compartilham o mesmo amor pelos animais.',
+      icon: HeartHandshake,
+      title: 'Compatibilidade clara',
+      description:
+        'O app evita ações incompatíveis e mostra por que um match não pode acontecer quando houver restrição.',
     },
     {
       icon: Star,
-      title: 'Cruzamento Responsável',
-      description: 'Promovemos práticas éticas de reprodução com foco na saúde e bem-estar dos animais.',
+      title: 'Salvos para olhar depois',
+      description:
+        'Marque perfis interessantes e volte quando tiver tempo de comparar com calma.',
+    },
+    {
+      icon: MessageCircle,
+      title: 'Conversa quando fizer sentido',
+      description:
+        'Matches e mensagens ficam juntos, com notificações para não perder uma curtida ou resposta.',
     },
   ];
 
-  const benefits = [
-    'Perfis verificados por veterinários',
-    'Chat seguro e privado',
-    'Histórico genético completo',
-    'Agendamento de encontros',
-    'Suporte especializado',
-    'Certificados reprodutivos',
+  const steps = [
+    'Cadastre o perfil do seu pet com as informações principais.',
+    'Busque por espécie, raça, distância, saúde e disponibilidade.',
+    'Curta, salve ou converse quando houver match entre os tutores.',
   ];
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-pink-50 to-purple-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Conectando pets,
-              <span className="text-pink-500"> criando laços</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              A primeira plataforma de cruzamento responsável de animais domésticos.
-              Encontre parceiros compatíveis para seu pet de forma segura e confiável.
+      <section className="relative isolate min-h-[76vh] overflow-hidden bg-gray-950">
+        <img
+          src={heroImage}
+          alt="Tutores apresentando seus pets em um parque"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/75 via-black/45 to-transparent" />
+
+        <div className="relative mx-auto flex min-h-[76vh] max-w-7xl items-center px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-2xl text-white">
+            <p className="mb-4 text-sm font-semibold uppercase text-rose-100">
+              Cruzamento responsável, com calma
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <h1 className="text-balance text-5xl font-semibold leading-[1.03] sm:text-6xl lg:text-7xl">
+              PetMatch
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-white/88">
+              Uma forma mais organizada de encontrar perfis compatíveis, salvar
+              opções e conversar com outros tutores antes de tomar qualquer decisão.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {isAuthenticated ? (
-                <Button size="lg" asChild className="text-lg px-8 py-3">
+                <Button size="lg" asChild className="bg-rose-600 hover:bg-rose-700">
                   <Link to="/discover">
-                    Começar a Descobrir
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    Descobrir perfis
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
               ) : (
                 <>
-                  <Button size="lg" asChild className="text-lg px-8 py-3">
+                  <Button size="lg" asChild className="bg-rose-600 hover:bg-rose-700">
                     <Link to="/register">
-                      Cadastrar Gratuitamente
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      Criar conta
+                      <ArrowRight className="h-5 w-5" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="lg" asChild className="text-lg px-8 py-3">
-                    <Link to="/login">Já tenho conta</Link>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    asChild
+                    className="border-white/50 bg-white/10 text-white hover:bg-white hover:text-gray-950"
+                  >
+                    <Link to="/login">Entrar</Link>
                   </Button>
                 </>
               )}
+            </div>
+            <div className="mt-8 grid max-w-xl grid-cols-1 gap-3 text-sm text-white/86 sm:grid-cols-3">
+              <span className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-rose-200" />
+                Busca filtrada
+              </span>
+              <span className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-rose-200" />
+                Dados visíveis
+              </span>
+              <span className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-rose-200" />
+                Proximidade
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="bg-white px-4 py-6 sm:px-6 lg:px-8">
+      <div className="surface-band px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SponsorSlot />
         </div>
       </div>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Por que escolher o PetMatch?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Oferecemos a plataforma mais completa e segura para cruzamento responsável de pets.
-            </p>
+      <section id="como-funciona" className="page-shell py-14 sm:py-18">
+        <div className="mb-10 max-w-3xl">
+          <p className="page-kicker">Como funciona</p>
+          <h2 className="page-title mt-3">Menos chute, mais informação útil.</h2>
+          <p className="page-copy mt-4">
+            O PetMatch organiza os detalhes que normalmente ficam espalhados em
+            mensagens: perfil do pet, filtros, salvos, curtidas, matches e conversa.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {steps.map((step, index) => (
+            <div key={step} className="soft-panel p-5">
+              <span className="mb-5 flex h-9 w-9 items-center justify-center rounded-md bg-emerald-100 text-sm font-semibold text-emerald-800">
+                {index + 1}
+              </span>
+              <p className="text-base leading-7 text-gray-700">{step}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="surface-band py-14 sm:py-18">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 max-w-3xl">
+            <p className="page-kicker">No dia a dia</p>
+            <h2 className="page-title mt-3">Ferramentas pequenas, mas práticas.</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <feature.icon className="h-12 w-12 text-pink-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature) => (
+              <div key={feature.title} className="soft-panel p-5">
+                <feature.icon className="mb-4 h-6 w-6 text-rose-700" />
+                <h3 className="text-lg font-semibold text-gray-950">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  {feature.description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Tudo que você precisa em um só lugar
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Nossa plataforma oferece todas as ferramentas necessárias para um cruzamento
-                responsável e seguro, desde a busca até o acompanhamento pós-cruzamento.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    <span className="text-gray-700">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-8 text-center">
-                <Heart className="h-24 w-24 text-pink-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Mais de 1000+ matches realizados
-                </h3>
-                <p className="text-gray-600">
-                  Tutores satisfeitos que encontraram parceiros perfeitos para seus pets
-                </p>
-              </div>
+      <section className="page-shell py-14 sm:py-18">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="page-kicker">Cuidado antes do match</p>
+            <h2 className="page-title mt-3">Uma decisão dessas precisa de contexto.</h2>
+            <p className="page-copy mt-4">
+              A ideia não é acelerar qualquer encontro. É facilitar uma conversa
+              responsável entre tutores, com dados suficientes para comparar perfis
+              e procurar orientação veterinária quando necessário.
+            </p>
+          </div>
+
+          <div className="soft-panel p-5">
+            <div className="space-y-4">
+              {[
+                'Compatibilidade por espécie e gênero antes da curtida.',
+                'Feedback quando uma ação não está disponível.',
+                'Perfis salvos para revisar sem perder a busca.',
+                'Notificacoes para curtidas, matches e mensagens.',
+              ].map((item) => (
+                <div key={item} className="flex gap-3">
+                  <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+                  <span className="text-sm leading-6 text-gray-700">{item}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-pink-500">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Pronto para encontrar o parceiro ideal para seu pet?
-          </h2>
-          <p className="text-xl text-pink-100 mb-8">
-            Junte-se a milhares de tutores que já confiam no PetMatch para cruzamentos responsáveis.
-          </p>
-          {!isAuthenticated && (
-            <Button size="lg" variant="secondary" asChild className="text-lg px-8 py-3">
-              <Link to="/register">
-                Começar Agora - É Grátis!
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          )}
+      <section className="bg-gray-950 py-14 text-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <div>
+            <h2 className="text-3xl font-semibold">
+              Comece pelo perfil do seu pet.
+            </h2>
+            <p className="mt-2 max-w-2xl text-white/70">
+              Depois disso, a busca, os salvos e as curtidas ficam bem mais simples.
+            </p>
+          </div>
+          <Button size="lg" asChild className="bg-rose-600 hover:bg-rose-700">
+            <Link to={isAuthenticated ? '/my-pets' : '/register'}>
+              {isAuthenticated ? 'Gerenciar meus pets' : 'Criar conta'}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </section>
     </div>

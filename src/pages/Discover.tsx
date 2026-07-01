@@ -113,15 +113,15 @@ const Discover: React.FC = () => {
     switch (especie.toLowerCase()) {
       case 'cão':
       case 'cachorro':
-        return <Dog className="h-5 w-5 text-pink-500" />;
+        return <Dog className="h-5 w-5 text-rose-600" />;
       case 'gato':
-        return <Cat className="h-5 w-5 text-pink-500" />;
+        return <Cat className="h-5 w-5 text-rose-600" />;
       case 'passaro':
-        return <Bird className="h-5 w-5 text-pink-500" />;
+        return <Bird className="h-5 w-5 text-rose-600" />;
       case 'coelho':
-        return <Rabbit className="h-5 w-5 text-pink-500" />;
+        return <Rabbit className="h-5 w-5 text-rose-600" />;
       default:
-        return <PawPrint className="h-5 w-5 text-pink-500" />;
+        return <PawPrint className="h-5 w-5 text-rose-600" />;
     }
   };
 
@@ -140,23 +140,26 @@ const Discover: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
+          <p className="mt-4 text-sm text-gray-600">Buscando perfis compatíveis...</p>
+        </div>
       </div>
     );
   }
 
   if (userPets.length === 0) {
     return (
-      <div className="container mx-auto p-4 text-center">
-        <div className="max-w-md mx-auto mt-20">
-          <PawPrint className="h-24 w-24 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Cadastre seu primeiro pet!</h2>
+      <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="empty-state">
+          <PawPrint className="h-16 w-16 text-gray-300 mx-auto mb-6" />
+          <h2 className="text-2xl font-semibold text-gray-950 mb-3">Cadastre seu primeiro pet</h2>
           <p className="text-gray-600 mb-6">
-            Para começar a descobrir novos amigos, você precisa cadastrar pelo menos um pet.
+            Para descobrir perfis, primeiro precisamos saber para qual pet você está buscando.
           </p>
           <Button onClick={() => (window.location.href = '/my-pets')}>
-            Cadastrar Pet
+            Cadastrar pet
           </Button>
         </div>
       </div>
@@ -166,17 +169,17 @@ const Discover: React.FC = () => {
   // Só mostra "não há mais pets" se já tentou buscar E não há pets OU já viu todos
   if (hasSearched && (pets.length === 0 || currentPetIndex >= pets.length)) {
     return (
-      <div className="container mx-auto p-4 text-center">
-        <div className="max-w-md mx-auto mt-20">
-          <Heart className="h-24 w-24 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Não há mais pets para descobrir!</h2>
+      <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="empty-state">
+          <Heart className="h-16 w-16 text-gray-300 mx-auto mb-6" />
+          <h2 className="text-2xl font-semibold text-gray-950 mb-3">Nenhum perfil novo por enquanto</h2>
           <p className="text-gray-600 mb-6">
             {pets.length === 0 
-              ? 'Não há pets disponíveis no seu alcance. Tente aumentar o alcance nas configurações ou volte mais tarde!'
-              : 'Você já viu todos os pets disponíveis. Volte mais tarde para ver novos amigos!'}
+              ? 'Não encontramos pets disponíveis no seu alcance. Tente ajustar o raio nas configurações ou volte mais tarde.'
+              : 'Você já viu todos os perfis disponíveis para esse pet. Volte depois para ver novidades.'}
           </p>
           <Button onClick={fetchPotentialMatches}>
-            Buscar Novamente
+            Buscar novamente
           </Button>
         </div>
       </div>
@@ -195,10 +198,18 @@ const Discover: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      {/* Pet Selection */}
+    <div className="mx-auto w-full max-w-md px-4 py-6">
+      <div className="mb-6">
+        <p className="page-kicker">Descobrir</p>
+        <h1 className="mt-2 text-3xl font-semibold text-gray-950">Um perfil por vez</h1>
+        <p className="mt-2 text-sm leading-6 text-gray-600">
+          Curta quando fizer sentido para o pet selecionado. Se não for compatível,
+          a lista já evita esse perfil.
+        </p>
+      </div>
+
       {userPets.length > 1 && (
-        <div className="mb-6">
+        <div className="soft-panel mb-6 p-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Descobrir para:
           </label>
@@ -208,7 +219,7 @@ const Discover: React.FC = () => {
               const pet = userPets.find(p => p.id === e.target.value);
               setSelectedUserPet(pet || null);
             }}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-pink-500 focus:border-pink-500"
+            className="w-full rounded-md border border-stone-300 bg-white p-2 text-sm focus:border-rose-500 focus:ring-rose-500"
           >
             {userPets.map((pet) => (
               <option key={pet.id} value={pet.id}>
@@ -219,21 +230,20 @@ const Discover: React.FC = () => {
         </div>
       )}
 
-      {/* Current Pet Card */}
       <div className="relative mb-6">
-        <Card className="overflow-hidden shadow-2xl">
+        <Card className="pet-card group py-0">
           {currentPet.fotos && currentPet.fotos.length > 0 && (
             <div className="relative h-96">
               <img
                 src={currentPet.fotos[0]}
                 alt={currentPet.nome}
-                className="w-full h-full object-cover"
+                className="pet-photo"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 text-white">
                 <div className="flex items-center gap-2 mb-2">
                   {getSpeciesIcon(currentPet.especie)}
-                  <h2 className="text-2xl font-bold">{currentPet.nome}</h2>
+                  <h2 className="text-2xl font-semibold">{currentPet.nome}</h2>
                   <span className="text-lg">
                     {calculateAge(currentPet.data_nascimento)}
                   </span>
@@ -263,12 +273,11 @@ const Discover: React.FC = () => {
         </Card>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex justify-center gap-6">
         <Button
           variant="outline"
           size="lg"
-          className="rounded-full w-16 h-16 border-red-200 hover:border-red-300 hover:bg-red-50"
+          className="h-16 w-16 rounded-full border-red-200 bg-white hover:border-red-300 hover:bg-red-50"
           onClick={() => handleSwipe('dislike')}
         >
           <X className="h-8 w-8 text-red-500" />
@@ -276,14 +285,13 @@ const Discover: React.FC = () => {
         
         <Button
           size="lg"
-          className="rounded-full w-16 h-16 bg-pink-500 hover:bg-pink-600"
+          className="h-16 w-16 rounded-full bg-rose-600 hover:bg-rose-700"
           onClick={() => handleSwipe('like')}
         >
           <Heart className="h-8 w-8 text-white" />
         </Button>
       </div>
 
-      {/* Progress Indicator */}
       <div className="mt-6 text-center text-sm text-gray-500">
         Pet {currentPetIndex + 1} de {pets.length}
       </div>
