@@ -103,7 +103,7 @@ const PetDetails: React.FC = () => {
     }
 
     if (selectedUserPet.genero === pet.genero) {
-      toast.error('Para reprodução, os pets precisam ter gêneros opostos.');
+      toast.error('Para reprodução, os pets compatíveis por espécie precisam ter gêneros opostos.');
       return;
     }
 
@@ -243,7 +243,7 @@ const PetDetails: React.FC = () => {
     if (selectedUserPet.genero === pet.genero) {
       return {
         canLike: false,
-        message: 'Para reprodução, os pets precisam ter gêneros opostos.',
+        message: 'Para reprodução, os pets compatíveis por espécie precisam ter gêneros opostos.',
       };
     }
 

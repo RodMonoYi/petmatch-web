@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Search as SearchIcon,
   MapPin,
@@ -21,6 +22,7 @@ import {
   Star,
   Syringe,
   Trophy,
+  PawPrint,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -45,6 +47,7 @@ const Search: React.FC = () => {
   const [likedPets, setLikedPets] = useState<Set<string>>(new Set());
   const [savingPetIds, setSavingPetIds] = useState<Set<string>>(new Set());
   const [likingPetIds, setLikingPetIds] = useState<Set<string>>(new Set());
+  const [petPendingLike, setPetPendingLike] = useState<Pet | null>(null);
   
   // Filtros
   const [filters, setFilters] = useState({
@@ -301,7 +304,7 @@ const Search: React.FC = () => {
         canLike: false,
         pet: null,
         label: 'Bloqueado',
-        message: 'Para reprodução, os pets precisam ter gêneros opostos.',
+        message: 'Para reprodução, os pets compatíveis por espécie precisam ter gêneros opostos.',
       };
     }
 
@@ -312,6 +315,19 @@ const Search: React.FC = () => {
       message: 'Você precisa ter um pet da mesma espécie para curtir.',
     };
   };
+
+  const getCompatibleLikePets = (pet: Pet) => {
+    const likedByPetIds = new Set(pet.curtido_por_pet_ids || []);
+
+    return userPets.filter((userPet) => (
+      userPet.especie === pet.especie &&
+      userPet.genero !== pet.genero &&
+      userPet.id !== pet.id &&
+      !likedByPetIds.has(userPet.id)
+    ));
+  };
+
+  const getPetPhoto = (pet: Pet) => pet.fotos?.[0] || '';
 
   const setPetSavedState = (petId: string, saved: boolean) => {
     setPets((currentPets) =>
@@ -361,49 +377,27 @@ const Search: React.FC = () => {
     }
   };
 
-  const setPetLikedState = (petId: string, liked: boolean, incrementCount = false) => {
-    setPets((currentPets) =>
-      currentPets.map((pet) =>
-        pet.id === petId
-          ? {
-              ...pet,
-              curtido: liked,
-              curtido_por_pet_ids: liked ? pet.curtido_por_pet_ids : [],
-              curtidas_count: incrementCount
-                ? (pet.curtidas_count || 0) + 1
-                : pet.curtidas_count,
-            }
-          : pet,
-      ),
-    );
-    setLikedPets((currentLikes) => {
-      const nextLikes = new Set(currentLikes);
-      if (liked) {
-        nextLikes.add(petId);
-      } else {
-        nextLikes.delete(petId);
-      }
-      return nextLikes;
-    });
-  };
-
-  const handleQuickLike = async (pet: Pet) => {
+  const openLikeSelector = (pet: Pet) => {
     const likeAvailability = getLikeAvailability(pet);
 
-    if (!likeAvailability.canLike || !likeAvailability.pet) {
+    if (!likeAvailability.canLike) {
       toast.error(likeAvailability.message);
       return;
     }
 
-    setLikingPetIds((currentIds) => new Set(currentIds).add(pet.id));
+    setPetPendingLike(pet);
+  };
+
+  const handleLikeWithPet = async (targetPet: Pet, sourcePet: Pet) => {
+    setLikingPetIds((currentIds) => new Set(currentIds).add(targetPet.id));
     try {
-      const result = await matchesAPI.swipe(likeAvailability.pet.id, pet.id, 'like');
+      const result = await matchesAPI.swipe(sourcePet.id, targetPet.id, 'like');
       setPets((currentPets) =>
         currentPets.map((currentPet) => {
-          if (currentPet.id !== pet.id) return currentPet;
+          if (currentPet.id !== targetPet.id) return currentPet;
 
           const likedByPetIds = new Set(currentPet.curtido_por_pet_ids || []);
-          likedByPetIds.add(likeAvailability.pet!.id);
+          likedByPetIds.add(sourcePet.id);
 
           return {
             ...currentPet,
@@ -415,14 +409,15 @@ const Search: React.FC = () => {
           };
         }),
       );
-      setLikedPets((currentLikes) => new Set(currentLikes).add(pet.id));
+      setLikedPets((currentLikes) => new Set(currentLikes).add(targetPet.id));
+      setPetPendingLike(null);
 
       if (result.isMatch) {
-        toast.success(`É um match com ${pet.nome}!`);
+        toast.success(`É um match com ${targetPet.nome}!`);
       } else if (result.alreadySwiped) {
         toast('Você já curtiu este pet.');
       } else {
-        toast.success(`Você curtiu ${pet.nome}.`);
+        toast.success(`${sourcePet.nome} curtiu ${targetPet.nome}.`);
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Erro ao curtir pet.';
@@ -430,11 +425,13 @@ const Search: React.FC = () => {
     } finally {
       setLikingPetIds((currentIds) => {
         const nextIds = new Set(currentIds);
-        nextIds.delete(pet.id);
+        nextIds.delete(targetPet.id);
         return nextIds;
       });
     }
   };
+
+  const compatibleLikePets = petPendingLike ? getCompatibleLikePets(petPendingLike) : [];
 
   if (!hasSelectedSpecies) {
     return (
@@ -834,7 +831,7 @@ const Search: React.FC = () => {
                     <Button
                       size="sm"
                       variant={isFullyLiked ? 'default' : 'outline'}
-                      onClick={() => handleQuickLike(pet)}
+                      onClick={() => openLikeSelector(pet)}
                       disabled={likeBlocked || isLiking}
                     >
                       <Heart className={`h-4 w-4 ${isFullyLiked ? 'fill-white' : 'text-rose-600'}`} />
@@ -886,6 +883,80 @@ const Search: React.FC = () => {
           )}
         </>
       )}
+
+      <Dialog open={Boolean(petPendingLike)} onOpenChange={(open) => !open && setPetPendingLike(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Escolha qual pet vai curtir</DialogTitle>
+          </DialogHeader>
+
+          {petPendingLike && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-rose-100 bg-rose-50/70 p-3">
+                <p className="text-sm text-gray-700">
+                  Você está curtindo <strong>{petPendingLike.nome}</strong>.
+                  Selecione um pet compatível para tentar o match.
+                </p>
+              </div>
+
+              {compatibleLikePets.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-stone-300 p-6 text-center">
+                  <PawPrint className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                  <p className="font-medium text-gray-900">Nenhum pet disponível</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Todos os seus pets compatíveis já curtiram este perfil ou não há
+                    pet da mesma espécie com gênero oposto.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {compatibleLikePets.map((userPet) => {
+                    const photo = getPetPhoto(userPet);
+                    const isLiking = petPendingLike
+                      ? likingPetIds.has(petPendingLike.id)
+                      : false;
+
+                    return (
+                      <button
+                        key={userPet.id}
+                        type="button"
+                        onClick={() => handleLikeWithPet(petPendingLike, userPet)}
+                        disabled={isLiking}
+                        className="flex w-full items-center gap-3 rounded-lg border border-stone-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={userPet.nome}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-rose-600">
+                              <PawPrint className="h-6 w-6" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold text-gray-950">
+                            {userPet.nome}
+                          </span>
+                          <span className="mt-0.5 block truncate text-sm text-gray-500">
+                            {userPet.raca} • {userPet.genero}
+                          </span>
+                        </span>
+                        <span className="rounded-md bg-rose-600 px-3 py-2 text-sm font-medium text-white">
+                          {isLiking ? 'Curtindo' : 'Curtir'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
