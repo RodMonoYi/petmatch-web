@@ -27,6 +27,10 @@ export interface Pet {
   fk_usuario_id: string;
   usuario?: User;
   distancia_km?: number; // Distância em km (adicionado no getPotentialMatches)
+  curtidas_count?: number;
+  curtido?: boolean;
+  curtido_por_pet_ids?: string[];
+  salvo?: boolean;
   criado_em: string;
   atualizado_em: string;
 }

@@ -42,6 +42,9 @@ const Search: React.FC = () => {
   const [hasSelectedSpecies, setHasSelectedSpecies] = useState(false);
   const [userPets, setUserPets] = useState<Pet[]>([]);
   const [favoritePets, setFavoritePets] = useState<Set<string>>(new Set());
+  const [likedPets, setLikedPets] = useState<Set<string>>(new Set());
+  const [savingPetIds, setSavingPetIds] = useState<Set<string>>(new Set());
+  const [likingPetIds, setLikingPetIds] = useState<Set<string>>(new Set());
   
   // Filtros
   const [filters, setFilters] = useState({
@@ -150,6 +153,28 @@ const Search: React.FC = () => {
       }
 
       setPets(filteredPets);
+      setFavoritePets((currentFavorites) => {
+        const nextFavorites = new Set(currentFavorites);
+        filteredPets.forEach((pet) => {
+          if (pet.salvo) {
+            nextFavorites.add(pet.id);
+          } else {
+            nextFavorites.delete(pet.id);
+          }
+        });
+        return nextFavorites;
+      });
+      setLikedPets((currentLikes) => {
+        const nextLikes = new Set(currentLikes);
+        filteredPets.forEach((pet) => {
+          if (pet.curtido) {
+            nextLikes.add(pet.id);
+          } else {
+            nextLikes.delete(pet.id);
+          }
+        });
+        return nextLikes;
+      });
       setTotal(response.total);
       setTotalPages(response.totalPages);
     } catch (error) {
@@ -231,40 +256,183 @@ const Search: React.FC = () => {
     filters.aceitaViagem !== 'all'
   );
 
-  const toggleFavorite = (petId: string) => {
-    setFavoritePets((prev) => {
-      const next = new Set(prev);
-      if (next.has(petId)) {
-        next.delete(petId);
-      } else {
-        next.add(petId);
+  const getLikeAvailability = (pet: Pet) => {
+    if (user?.id === pet.fk_usuario_id) {
+      return {
+        canLike: false,
+        pet: null,
+        label: 'Seu pet',
+        message: 'Este pet pertence a você.',
+      };
+    }
+
+    const sameSpeciesPets = userPets.filter((userPet) => (
+      userPet.especie === pet.especie &&
+      userPet.id !== pet.id
+    ));
+    const compatiblePets = sameSpeciesPets.filter((userPet) => (
+      userPet.genero !== pet.genero
+    ));
+    const likedByPetIds = new Set(pet.curtido_por_pet_ids || []);
+    const compatiblePet = compatiblePets.find((userPet) => (
+      !likedByPetIds.has(userPet.id)
+    ));
+
+    if (compatiblePet) {
+      return {
+        canLike: true,
+        pet: compatiblePet,
+        label: 'Curtir',
+        message: '',
+      };
+    }
+
+    if (sameSpeciesPets.length > 0) {
+      if (compatiblePets.length > 0) {
+        return {
+          canLike: false,
+          pet: null,
+          label: 'Curtido',
+          message: 'Todos os seus pets compatíveis já curtiram este perfil.',
+        };
       }
-      return next;
+
+      return {
+        canLike: false,
+        pet: null,
+        label: 'Bloqueado',
+        message: 'Para reprodução, os pets precisam ter gêneros opostos.',
+      };
+    }
+
+    return {
+      canLike: false,
+      pet: null,
+      label: 'Bloqueado',
+      message: 'Você precisa ter um pet da mesma espécie para curtir.',
+    };
+  };
+
+  const setPetSavedState = (petId: string, saved: boolean) => {
+    setPets((currentPets) =>
+      currentPets.map((pet) =>
+        pet.id === petId ? { ...pet, salvo: saved } : pet,
+      ),
+    );
+    setFavoritePets((currentFavorites) => {
+      const nextFavorites = new Set(currentFavorites);
+      if (saved) {
+        nextFavorites.add(petId);
+      } else {
+        nextFavorites.delete(petId);
+      }
+      return nextFavorites;
+    });
+  };
+
+  const toggleFavorite = async (pet: Pet) => {
+    if (user?.id === pet.fk_usuario_id) {
+      toast.error('Seu próprio pet já fica disponível em Meus Pets.');
+      return;
+    }
+
+    const wasSaved = favoritePets.has(pet.id) || Boolean(pet.salvo);
+    setSavingPetIds((currentIds) => new Set(currentIds).add(pet.id));
+    setPetSavedState(pet.id, !wasSaved);
+
+    try {
+      if (wasSaved) {
+        await petsAPI.unsave(pet.id);
+        toast.success(`${pet.nome} removido dos salvos.`);
+      } else {
+        await petsAPI.save(pet.id);
+        toast.success(`${pet.nome} salvo.`);
+      }
+    } catch (error: any) {
+      setPetSavedState(pet.id, wasSaved);
+      const message = error.response?.data?.message || 'Erro ao atualizar salvos.';
+      toast.error(message);
+    } finally {
+      setSavingPetIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(pet.id);
+        return nextIds;
+      });
+    }
+  };
+
+  const setPetLikedState = (petId: string, liked: boolean, incrementCount = false) => {
+    setPets((currentPets) =>
+      currentPets.map((pet) =>
+        pet.id === petId
+          ? {
+              ...pet,
+              curtido: liked,
+              curtido_por_pet_ids: liked ? pet.curtido_por_pet_ids : [],
+              curtidas_count: incrementCount
+                ? (pet.curtidas_count || 0) + 1
+                : pet.curtidas_count,
+            }
+          : pet,
+      ),
+    );
+    setLikedPets((currentLikes) => {
+      const nextLikes = new Set(currentLikes);
+      if (liked) {
+        nextLikes.add(petId);
+      } else {
+        nextLikes.delete(petId);
+      }
+      return nextLikes;
     });
   };
 
   const handleQuickLike = async (pet: Pet) => {
-    const compatiblePet = userPets.find((userPet) => (
-      userPet.especie === pet.especie &&
-      userPet.genero !== pet.genero &&
-      userPet.id !== pet.id
-    ));
+    const likeAvailability = getLikeAvailability(pet);
 
-    if (!compatiblePet) {
-      toast.error('Cadastre ou selecione um pet compatível para curtir.');
+    if (!likeAvailability.canLike || !likeAvailability.pet) {
+      toast.error(likeAvailability.message);
       return;
     }
 
+    setLikingPetIds((currentIds) => new Set(currentIds).add(pet.id));
     try {
-      const result = await matchesAPI.swipe(compatiblePet.id, pet.id, 'like');
+      const result = await matchesAPI.swipe(likeAvailability.pet.id, pet.id, 'like');
+      setPets((currentPets) =>
+        currentPets.map((currentPet) => {
+          if (currentPet.id !== pet.id) return currentPet;
+
+          const likedByPetIds = new Set(currentPet.curtido_por_pet_ids || []);
+          likedByPetIds.add(likeAvailability.pet!.id);
+
+          return {
+            ...currentPet,
+            curtido: true,
+            curtido_por_pet_ids: Array.from(likedByPetIds),
+            curtidas_count: result.alreadySwiped
+              ? currentPet.curtidas_count
+              : (currentPet.curtidas_count || 0) + 1,
+          };
+        }),
+      );
+      setLikedPets((currentLikes) => new Set(currentLikes).add(pet.id));
+
       if (result.isMatch) {
         toast.success(`É um match com ${pet.nome}!`);
+      } else if (result.alreadySwiped) {
+        toast('Você já curtiu este pet.');
       } else {
         toast.success(`Você curtiu ${pet.nome}.`);
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Erro ao curtir pet.';
       toast.error(message);
+    } finally {
+      setLikingPetIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(pet.id);
+        return nextIds;
+      });
     }
   };
 
@@ -567,6 +735,13 @@ const Search: React.FC = () => {
             {pets.map((pet) => {
               const status = getPetStatus(pet);
               const isFavorite = favoritePets.has(pet.id);
+              const isSaving = savingPetIds.has(pet.id);
+              const isLiking = likingPetIds.has(pet.id);
+              const likeAvailability = getLikeAvailability(pet);
+              const isFullyLiked =
+                !likeAvailability.canLike && likeAvailability.label === 'Curtido';
+              const hasAnyLike = likedPets.has(pet.id);
+              const likeBlocked = !likeAvailability.canLike;
 
               return (
               <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -607,6 +782,10 @@ const Search: React.FC = () => {
                         {pet.distancia_km ? ` • ${pet.distancia_km.toFixed(1)} km` : ''}
                       </p>
                       <p>{pet.genero} • {pet.porte}</p>
+                      <p className="flex items-center gap-1 text-gray-500">
+                        <Heart className="h-4 w-4 text-pink-500" />
+                        {pet.curtidas_count || 0} {(pet.curtidas_count || 0) === 1 ? 'curtida' : 'curtidas'}
+                      </p>
                     </div>
                   </div>
 
@@ -637,18 +816,35 @@ const Search: React.FC = () => {
                     </p>
                   )}
 
+                  {!likeAvailability.canLike && (
+                    <p className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-800">
+                      {likeAvailability.message}
+                    </p>
+                  )}
+                  {hasAnyLike && likeAvailability.canLike && (
+                    <p className="rounded-md bg-sky-50 px-2 py-1.5 text-xs text-sky-800">
+                      Outro pet seu já curtiu este perfil. Você ainda pode curtir com {likeAvailability.pet?.nome}.
+                    </p>
+                  )}
+
                   <div className="grid grid-cols-3 gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleQuickLike(pet)}>
-                      <Heart className="h-4 w-4 text-pink-500" />
-                      Curtir
+                    <Button
+                      size="sm"
+                      variant={isFullyLiked ? 'default' : 'outline'}
+                      onClick={() => handleQuickLike(pet)}
+                      disabled={likeBlocked || isLiking}
+                    >
+                      <Heart className={`h-4 w-4 ${isFullyLiked ? 'fill-white' : 'text-pink-500'}`} />
+                      {isFullyLiked ? 'Curtido' : isLiking ? 'Curtindo' : likeAvailability.label}
                     </Button>
                     <Button
                       size="sm"
                       variant={isFavorite ? 'default' : 'outline'}
-                      onClick={() => toggleFavorite(pet.id)}
+                      onClick={() => toggleFavorite(pet)}
+                      disabled={isSaving}
                     >
-                      <Star className="h-4 w-4" />
-                      Salvar
+                      <Star className={`h-4 w-4 ${isFavorite ? 'fill-white' : ''}`} />
+                      {isFavorite ? 'Salvo' : isSaving ? 'Salvando' : 'Salvar'}
                     </Button>
                     <Button size="sm" variant="outline" asChild>
                       <Link to={`/pets/${pet.id}`}>

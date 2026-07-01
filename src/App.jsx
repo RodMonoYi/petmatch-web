@@ -14,6 +14,7 @@ import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Search from './pages/Search';
 import PetDetails from './pages/PetDetails';
+import SavedPets from './pages/SavedPets';
 import './App.css';
 
 const PublicOnlyRoute = ({ children }) => {
@@ -106,6 +107,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Search />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/saved"
+                element={
+                  <ProtectedRoute>
+                    <SavedPets />
                   </ProtectedRoute>
                 }
               />

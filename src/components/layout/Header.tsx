@@ -9,12 +9,23 @@ import {
   Heart,
   HeartHandshake,
   LogOut,
+  Menu,
   MessageCircle,
   PawPrint,
   Settings,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -70,6 +81,18 @@ const Header: React.FC = () => {
     useNotifications();
   const navigate = useNavigate();
   const userInitial = user?.nome?.charAt(0).toUpperCase() || 'U';
+  const authenticatedNavItems = [
+    { to: '/discover', label: 'Descobrir' },
+    { to: '/search', label: 'Buscar' },
+    { to: '/matches', label: 'Matches' },
+    { to: '/saved', label: 'Salvos' },
+    { to: '/chat', label: 'Chat' },
+    { to: '/my-pets', label: 'Meus Pets' },
+  ];
+  const publicNavItems = [
+    { to: '/sobre', label: 'Sobre' },
+    { to: '/sobre', label: 'Como Funciona' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -81,68 +104,46 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex min-w-0 items-center space-x-2">
             <Heart className="h-8 w-8 text-pink-500" />
-            <span className="text-2xl font-bold text-gray-900">PetMatch</span>
+            <span className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
+              PetMatch
+            </span>
           </Link>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/discover"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Descobrir
-                </Link>
-                <Link
-                  to="/search"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Buscar
-                </Link>
-                <Link
-                  to="/matches"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Matches
-                </Link>
-                <Link
-                  to="/chat"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Chat
-                </Link>
-                <Link
-                  to="/my-pets"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Meus Pets
-                </Link>
+                {authenticatedNavItems.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="text-gray-700 transition-colors hover:text-pink-500"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </>
             ) : (
               <>
-                <Link
-                  to="/sobre"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Sobre
-                </Link>
-                <Link
-                  to="/sobre"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
-                >
-                  Como Funciona
-                </Link>
+                {publicNavItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className="text-gray-700 transition-colors hover:text-pink-500"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </>
             )}
           </nav>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
@@ -251,14 +252,14 @@ const Header: React.FC = () => {
                 </Popover>
                 <Link
                   to="/settings"
-                  className="text-gray-700 hover:text-pink-500 transition-colors"
+                  className="hidden text-gray-700 transition-colors hover:text-pink-500 md:block"
                   title="Configurações"
                 >
                   <Settings className="h-5 w-5" />
                 </Link>
                 <Link
                   to="/settings"
-                  className="hidden items-center gap-2 rounded-md px-2 py-1.5 text-gray-700 transition-colors hover:bg-gray-50 hover:text-pink-500 sm:flex"
+                  className="hidden items-center gap-2 rounded-md px-2 py-1.5 text-gray-700 transition-colors hover:bg-gray-50 hover:text-pink-500 lg:flex"
                 >
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-pink-100 text-sm font-semibold text-pink-700">
@@ -268,19 +269,109 @@ const Header: React.FC = () => {
                   <span className="max-w-32 truncate font-medium">{user?.nome}</span>
                   <ChevronDown className="h-4 w-4" />
                 </Link>
-                <Button variant="outline" onClick={handleLogout}>
+                <Button variant="outline" onClick={handleLogout} className="hidden md:inline-flex">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </Button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500 md:hidden"
+                      aria-label="Abrir menu"
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent className="w-80 max-w-[85vw]">
+                    <SheetHeader>
+                      <SheetTitle>PetMatch</SheetTitle>
+                      <SheetDescription>
+                        Navegação principal
+                      </SheetDescription>
+                    </SheetHeader>
+                    <nav className="flex flex-col gap-1 px-4">
+                      {authenticatedNavItems.map((item) => (
+                        <SheetClose key={item.to} asChild>
+                          <Link
+                            to={item.to}
+                            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-600"
+                          >
+                            {item.label}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </nav>
+                    <SheetFooter>
+                      <SheetClose asChild>
+                        <Button variant="outline" asChild>
+                          <Link to="/settings">
+                            <Settings className="h-4 w-4" />
+                            Configurações
+                          </Link>
+                        </Button>
+                      </SheetClose>
+                      <Button variant="outline" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4" />
+                        Sair
+                      </Button>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
+                <div className="hidden items-center space-x-2 md:flex">
                 <Button variant="ghost" asChild>
                   <Link to="/login">Entrar</Link>
                 </Button>
                 <Button asChild>
                   <Link to="/register">Cadastrar</Link>
                 </Button>
+                </div>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="rounded-md p-2 text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-500 md:hidden"
+                      aria-label="Abrir menu"
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent className="w-80 max-w-[85vw]">
+                    <SheetHeader>
+                      <SheetTitle>PetMatch</SheetTitle>
+                      <SheetDescription>
+                        Navegação principal
+                      </SheetDescription>
+                    </SheetHeader>
+                    <nav className="flex flex-col gap-1 px-4">
+                      {publicNavItems.map((item) => (
+                        <SheetClose key={item.label} asChild>
+                          <Link
+                            to={item.to}
+                            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-pink-50 hover:text-pink-600"
+                          >
+                            {item.label}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </nav>
+                    <SheetFooter>
+                      <SheetClose asChild>
+                        <Button variant="outline" asChild>
+                          <Link to="/login">Entrar</Link>
+                        </Button>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Button asChild>
+                          <Link to="/register">Cadastrar</Link>
+                        </Button>
+                      </SheetClose>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
               </div>
             )}
           </div>

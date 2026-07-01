@@ -66,6 +66,9 @@ export const petsAPI = {
   
   getMyPets: (): Promise<Pet[]> =>
     api.get('/pets/my-pets').then(res => res.data),
+
+  getSaved: (): Promise<Pet[]> =>
+    api.get('/pets/saved').then(res => res.data),
   
   getById: (id: string): Promise<Pet> =>
     api.get(`/pets/${id}`).then(res => res.data),
@@ -75,6 +78,12 @@ export const petsAPI = {
   
   delete: (id: string): Promise<void> =>
     api.delete(`/pets/${id}`).then(res => res.data),
+
+  save: (id: string): Promise<{ petId: string; salvo: boolean }> =>
+    api.post(`/pets/${id}/save`).then(res => res.data),
+
+  unsave: (id: string): Promise<{ petId: string; salvo: boolean }> =>
+    api.delete(`/pets/${id}/save`).then(res => res.data),
 };
 
 // Matches API
